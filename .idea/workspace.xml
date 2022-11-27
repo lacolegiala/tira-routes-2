@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d9c83027-47ef-42cb-b1eb-a8655c209d5a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/com/tira/IMapHeader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -62,6 +62,9 @@
       <recent name="" />
     </key>
     <key name="CreateTestDialog.RecentsKey">
+      <recent name="com.tira" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="com.tira" />
     </key>
   </component>
