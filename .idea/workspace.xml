@@ -5,19 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d9c83027-47ef-42cb-b1eb-a8655c209d5a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tira/GridNodeComparator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tira/IUpdateView.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tira/IterativeDeepeningAStar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/documents/weekly-reports/week6.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tira/MapApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tira/MapApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tira/MapFileReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tira/MapFileReader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tira/MapGrid.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tira/MapGrid.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/tira/MapView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tira/MapView.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tira-routes-2.iml" beforeDir="false" afterPath="$PROJECT_DIR$/tira-routes-2.iml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
