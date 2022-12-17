@@ -28,6 +28,7 @@ import javafx.scene.paint.Color;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import java.util.Queue;
 import java.util.Stack;
 
 @Log4j2
@@ -55,6 +56,10 @@ public class MapView implements IUpdateView {
     private boolean found = false;
 
     private Stack<GridNode> route = null;
+
+    private Queue<GridNode> routeJPS = null;
+
+    private boolean foundJPS = false;
 
     public MapView(MapFileReader mapFileReader) {
         this.mapFileReader = mapFileReader;
@@ -269,11 +274,12 @@ public class MapView implements IUpdateView {
         grid.getChildren().add(gridCoordinates);
 
         // Add buttons to start the search
-        Button submit = new Button("Start");
+        Button submit = new Button("JPS");
+
         GridPane.setConstraints(submit, 0, 2);
         grid.getChildren().add(submit);
 
-        submit.setOnAction(event -> showEndpoints());
+        submit.setOnAction(event -> findRouteJPS());
         //Defining the Find button
         Button clear = new Button("IDA*");
         GridPane.setConstraints(clear, 1, 2);
@@ -293,6 +299,9 @@ public class MapView implements IUpdateView {
     private void clearSearchData() {
         found = false;
         route = null;
+        foundJPS = false;
+        routeJPS = null;
+
         for (int y = 0; y < mapFileReader.getMapGrid().getSizeX(); y++) {
             for (int x = 0; x < mapFileReader.getMapGrid().getSizeX(); x++) {
                 mapFileReader.getMapGrid().getGrid()[x][y].setSearching(false);
@@ -322,6 +331,12 @@ public class MapView implements IUpdateView {
                     GridNode testNode = new GridNode(x, y, NodeType.FREE);
                     if (route != null && route.contains(testNode)) {
                         writableImage.getPixelWriter().setColor(x, y, Color.LAWNGREEN);
+                    }
+                }
+                if (foundJPS && routeJPS != null) {
+                    GridNode testNode = new GridNode(x, y, NodeType.FREE);
+                    if (routeJPS != null && routeJPS.contains(testNode)) {
+                        writableImage.getPixelWriter().setColor(x, y, Color.CYAN);
                     }
                 }
             }
@@ -367,8 +382,6 @@ public class MapView implements IUpdateView {
         GridNode goal = new GridNode(targetX, targetY, NodeType.FREE);
         log.debug("finding route to {}", goal);
 
-        IHeuristic iHeuristicManhattan = new ManhattanHeuristic();
-        IHeuristic iHeuristicDiagonal = new DiagonalHeuristic();
         IterativeDeepeningAStar iterativeDeepeningAStar = new IterativeDeepeningAStar(goal, mapFileReader.getMapGrid(), this);
         GridNode start = new GridNode(startX, startY, NodeType.FREE);
 
@@ -396,10 +409,43 @@ public class MapView implements IUpdateView {
         new Thread(task).start();
     }
 
+
+    private void findRouteJPS() {
+        foundJPS = false;
+        routeJPS = null;
+        GridNode goal = new GridNode(targetX, targetY, NodeType.FREE);
+        log.debug("finding jps route to {}", goal);
+
+        JumpPointSearch jumpPointSearch = new JumpPointSearch(mapFileReader.getMapGrid(), this);
+        GridNode start = new GridNode(startX, startY, NodeType.FREE);
+
+        isFinding = true;
+        Task task = new Task<Void>() {
+
+            @Override
+            public Void call() {
+                Queue<GridNode> path = jumpPointSearch.search(start, goal);
+                if (path != null) {
+                    foundJPS = true;
+                    routeJPS = path;
+                    log.debug("Found: JPS route {}", routeJPS);
+                    updateView();
+                }
+                return null;
+            }
+        };
+        task.setOnSucceeded(event -> {
+            isFinding = false;
+        });
+        new Thread(task).start();
+    }
+
+
     @Override
     public void updateView() {
         Platform.runLater(() -> {
             showEndpoints();
         });
     }
+
 }
