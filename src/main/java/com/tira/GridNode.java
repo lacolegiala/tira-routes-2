@@ -1,6 +1,7 @@
 package com.tira;
 
 public class GridNode {
+
     private final int x;
     private final int y;
     private NodeType t;
@@ -38,7 +39,7 @@ public class GridNode {
     }
 
     public String toString() {
-        return "("+x+","+y+"):"+t+ " "+(searching? "!": " ");
+        return "("+x+","+y+")";
     }
     public boolean isSearching() {
         return searching;
@@ -56,6 +57,10 @@ public class GridNode {
         this.checked = checked;
     }
 
+    public boolean isTraversable() {
+        return t == NodeType.FREE;
+    }
+
     // Return true in comparison if another GridNode has same coordinates
     public boolean equals(Object n) {
         if (n instanceof GridNode) {
@@ -65,5 +70,5 @@ public class GridNode {
         }
         return false;
     }
-
 }
+

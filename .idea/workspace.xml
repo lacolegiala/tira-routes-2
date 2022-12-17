@@ -5,8 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d9c83027-47ef-42cb-b1eb-a8655c209d5a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/tira/Direction.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/tira/JumpPointSearch.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tira/Direction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tira/Direction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tira/GridNode.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tira/GridNode.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/tira/MapGrid.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/tira/MapGrid.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

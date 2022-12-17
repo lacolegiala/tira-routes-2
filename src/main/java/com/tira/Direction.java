@@ -71,5 +71,5 @@ public class Direction {
         }
         return DIRECTION.N;
     }
-    
+
 }
