@@ -61,6 +61,14 @@ public class MapView implements IUpdateView {
 
     private boolean foundJPS = false;
 
+    // The initial values for heuristic multipliers;
+    // now the UI can be used to change these
+    private Double jpsD = 1.5;
+    private Double jpsD2 = 1.5;
+
+    private Double idaD = 1.5;
+    private Double idaD2 = 2.5;
+
     public MapView(MapFileReader mapFileReader) {
         this.mapFileReader = mapFileReader;
         writableImage = new WritableImage(mapFileReader.getMapGrid().getSizeX(),
@@ -85,6 +93,7 @@ public class MapView implements IUpdateView {
         gridPane.getChildren().addAll(vboxImage, vboxInputFields);
     }
 
+    // LATER: zoom seems to slow the UI a lot...
     private ScrollPane createZoomPane(final VBox vbox) {
         final double SCALE_DELTA = 1.1;
         final StackPane zoomPane = new StackPane();
@@ -192,6 +201,25 @@ public class MapView implements IUpdateView {
         }
     }
 
+    Integer checkNewCoordinate(String newValue, Integer oldValue) {
+        Integer returnValue = oldValue;
+        if (NumberUtils.isCreatable(newValue)) {
+            returnValue = Integer.valueOf(newValue);
+            coordinatesChangedLogging();
+            clearSearchData();
+        }
+        return returnValue;
+    }
+
+    Double checkNewMultiplier(String newValue, Double oldValue) {
+        Double returnValue = oldValue;
+        if (NumberUtils.isCreatable(newValue)) {
+            returnValue = Double.valueOf(newValue);
+            clearSearchData();
+        }
+        return returnValue;
+    }
+
     private VBox addInputFields() {
         //Creating a GridPane container
         GridPane grid = new GridPane();
@@ -202,55 +230,39 @@ public class MapView implements IUpdateView {
         GridPane gridCoordinates = new GridPane();
         gridCoordinates.setPadding(new Insets(10, 10, 10, 10));
         Label lStart = new Label("Start");
-        Label lsX = new Label("X:");
-        Label lsY = new Label("Y:");
-        Label ltX = new Label("X:");
-        Label ltY = new Label("Y:");
+        Label lsX = new Label(" X: ");
+        Label lsY = new Label(" Y: ");
+        Label ltX = new Label(" X: ");
+        Label ltY = new Label(" Y: ");
         Label lTarget = new Label("Target");
         TextField startX = new TextField();
         TextField startY = new TextField();
         TextField targetX = new TextField();
         TextField targetY = new TextField();
 
+
         startX.textProperty().addListener((observable, oldValue, newValue) ->
         {
-            if (NumberUtils.isCreatable(newValue)) {
-                this.startX = Integer.valueOf(newValue);
-                coordinatesChangedLogging();
-                clearSearchData();
-                showEndpoints();
-            }
+            this.startX = checkNewCoordinate(newValue, this.startX);
+            showEndpoints();
         });
 
         startY.textProperty().addListener((observable, oldValue, newValue) ->
         {
-            if (NumberUtils.isCreatable(newValue)) {
-                this.startY = Integer.valueOf(newValue);
-                coordinatesChangedLogging();
-                clearSearchData();
-                showEndpoints();
-            }
-
+            this.startY = checkNewCoordinate(newValue, this.startY);
+            showEndpoints();
         });
 
         targetX.textProperty().addListener((observable, oldValue, newValue) ->
         {
-            if (NumberUtils.isCreatable(newValue)) {
-                this.targetX = Integer.valueOf(newValue);
-                coordinatesChangedLogging();
-                clearSearchData();
-                showEndpoints();
-            }
+            this.targetX = checkNewCoordinate(newValue, this.targetX);
+            showEndpoints();
         });
 
         targetY.textProperty().addListener((observable, oldValue, newValue) ->
         {
-            if (NumberUtils.isCreatable(newValue)) {
-                this.targetY = Integer.valueOf(newValue);
-                coordinatesChangedLogging();
-                clearSearchData();
-                showEndpoints();
-            }
+            this.targetY = checkNewCoordinate(newValue, this.targetY);
+            showEndpoints();
         });
 
         GridPane.setConstraints(lStart, 0, 0);  // column 0, row 0: Start
@@ -271,20 +283,65 @@ public class MapView implements IUpdateView {
 
         GridPane.setConstraints(gridCoordinates, 0, 0);
 
-        grid.getChildren().add(gridCoordinates);
+        // Add buttons to start the search; add also fields to change the heuristic multipliers
+        Label jlD = new Label(" D: ");
+        Label jlD2 = new Label(" D2:");
+        TextField jpsValueD = new TextField();
+        TextField jpsValueD2 = new TextField();
+        Label idalD = new Label(" D: ");
+        Label idalD2 = new Label(" D2:");
+        TextField idaValueD = new TextField();
+        TextField idaValueD2 = new TextField();
 
-        // Add buttons to start the search
-        Button submit = new Button("JPS");
+        jpsValueD.textProperty().set(String.valueOf(jpsD));
+        jpsValueD2.textProperty().set(String.valueOf(jpsD2));
 
-        GridPane.setConstraints(submit, 0, 2);
-        grid.getChildren().add(submit);
+        idaValueD.textProperty().set(String.valueOf(idaD));
+        idaValueD2.textProperty().set(String.valueOf(idaD2));
 
-        submit.setOnAction(event -> findRouteJPS());
+        jpsValueD.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            jpsD = checkNewMultiplier(newValue, jpsD);
+            showEndpoints();
+        });
+        jpsValueD2.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            jpsD2 = checkNewMultiplier(newValue, jpsD2);
+            showEndpoints();
+        });
+        idaValueD.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            idaD = checkNewMultiplier(newValue, idaD);
+            showEndpoints();
+        });
+        jpsValueD2.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            idaD2 = checkNewMultiplier(newValue, idaD2);
+            showEndpoints();
+        });
+
+        GridPane gridButtons = new GridPane();
+        gridButtons.setPadding(new Insets(10, 10, 10, 10));
+        Button jpsSearch = new Button("JPS");
+        jpsSearch.setOnAction(event -> findRouteJPS());
         //Defining the Find button
-        Button clear = new Button("IDA*");
-        GridPane.setConstraints(clear, 1, 2);
-        grid.getChildren().add(clear);
-        clear.setOnAction(event -> findRoute());
+        Button idaSearch = new Button("IDA*");
+        GridPane.setConstraints(idaSearch, 1, 2);
+
+        idaSearch.setOnAction(event -> findRoute());
+
+        GridPane.setConstraints(jpsSearch, 0, 0);
+        GridPane.setConstraints(jlD, 1, 0);  // column 1, row 0 D
+        GridPane.setConstraints(jlD2, 1, 1);  // column 1, row 1: D2
+        GridPane.setConstraints(jpsValueD, 2, 0);  // column 2, row 0, D value
+        GridPane.setConstraints(jpsValueD2, 2, 1);  // column 2, row 1: D2 value
+
+        GridPane.setConstraints(idaSearch, 4, 0);
+        GridPane.setConstraints(idalD, 5, 0);  // column 5, row 0 D
+        GridPane.setConstraints(idalD2, 5, 1);  // column 5, row 1: D2
+        GridPane.setConstraints(idaValueD, 6, 0);  // column 6, row 0, D value
+        GridPane.setConstraints(idaValueD2, 6, 1);  // column 6, row 1: D2 value
+        gridButtons.getChildren().addAll(jpsSearch, jlD, jpsValueD, idaSearch, idalD, idaValueD,
+                jlD2, jpsValueD2, idalD2, idaValueD2);
+
+        GridPane.setConstraints(gridButtons, 0, 1);
+        grid.getChildren().addAll(gridCoordinates, gridButtons);
         VBox vbox = new VBox();
         vbox.getChildren().addAll(grid);
 
@@ -309,6 +366,17 @@ public class MapView implements IUpdateView {
             }
         }
     }
+
+    private void clearTemporarySearchData() {
+
+        for (int y = 0; y < mapFileReader.getMapGrid().getSizeX(); y++) {
+            for (int x = 0; x < mapFileReader.getMapGrid().getSizeX(); x++) {
+                mapFileReader.getMapGrid().getGrid()[x][y].setSearching(false);
+                mapFileReader.getMapGrid().getGrid()[x][y].setChecked(false);
+            }
+        }
+    }
+
 
     private void showEndpoints() {
         // update the image with the pixels
@@ -382,7 +450,8 @@ public class MapView implements IUpdateView {
         GridNode goal = new GridNode(targetX, targetY, NodeType.FREE);
         log.debug("finding route to {}", goal);
 
-        IterativeDeepeningAStar iterativeDeepeningAStar = new IterativeDeepeningAStar(goal, mapFileReader.getMapGrid(), this);
+        IterativeDeepeningAStar iterativeDeepeningAStar =
+                new IterativeDeepeningAStar(goal, mapFileReader.getMapGrid(), this, idaD, idaD2);
         GridNode start = new GridNode(startX, startY, NodeType.FREE);
 
         isFinding = true;
@@ -402,9 +471,7 @@ public class MapView implements IUpdateView {
         };
         task.setOnSucceeded(event -> {
             isFinding = false;
-            if (found) {
-
-            }
+            clearTemporarySearchData();
         });
         new Thread(task).start();
     }
@@ -414,10 +481,10 @@ public class MapView implements IUpdateView {
         foundJPS = false;
         routeJPS = null;
         GridNode goal = new GridNode(targetX, targetY, NodeType.FREE);
-        log.debug("finding jps route to {}", goal);
+        log.debug("finding jps route to {} using D {} D2 {}", goal, jpsD, jpsD2);
 
-        JumpPointSearch jumpPointSearch = new JumpPointSearch(mapFileReader.getMapGrid(), this);
-        GridNode start = new GridNode(startX, startY, NodeType.FREE);
+        JumpPointSearch jumpPointSearch = new JumpPointSearch(mapFileReader.getMapGrid(), this, jpsD, jpsD2);
+        GridNode start = new GridNode(startX, startY);
 
         isFinding = true;
         Task task = new Task<Void>() {
@@ -428,14 +495,16 @@ public class MapView implements IUpdateView {
                 if (path != null) {
                     foundJPS = true;
                     routeJPS = path;
-                    log.debug("Found: JPS route {}", routeJPS);
+                    log.debug("Found: JPS route, len {}:  {}", routeJPS.size(), routeJPS);
                     updateView();
                 }
+                isFinding = false;
                 return null;
             }
         };
         task.setOnSucceeded(event -> {
             isFinding = false;
+            clearTemporarySearchData();
         });
         new Thread(task).start();
     }

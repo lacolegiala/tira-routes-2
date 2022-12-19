@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Log4j2
 public class MapGrid {
@@ -236,12 +237,13 @@ public class MapGrid {
     }
 
 
-    public List<GridNode> getGridNodesSortedByDistance(GridNode node, GridNode target) {
+    public List<GridNode> getGridNodesSortedByDistanceToTarget(GridNode node, GridNode target) {
         List<GridNode> neighbours = getGridNodesNonBlockedNeighbours(node);
         GridNodeComparator gridNodeComparator = new GridNodeComparator(target, getHeuristic());
         neighbours.sort(gridNodeComparator);
         return neighbours;
     }
+
 
     public int getSizeX() {
         return sizeX;
@@ -251,7 +253,12 @@ public class MapGrid {
         return sizeY;
     }
 
+    public void setSearching(int x, int y, boolean working) {
+        grid[x][y].setSearching(working);
+    }
+
     public IHeuristic getHeuristic() {
+        // return iHeuristicManhattan;
         return heuristic;
     }
 
@@ -284,5 +291,6 @@ public class MapGrid {
         }
         return null;
     }
+
 
 }

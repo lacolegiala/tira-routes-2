@@ -2,8 +2,7 @@ package com.tira;
 
 import lombok.extern.log4j.Log4j2;
 
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /* specs
 From wikipedia:
@@ -56,11 +55,28 @@ public class IterativeDeepeningAStar {
     IUpdateView viewUpdater;
 
     IHeuristic heuristic;
-    public IterativeDeepeningAStar(GridNode endNode, MapGrid mapGrid, IUpdateView viewUpdater) {
+
+    // Need also a map to collect the real distances from root calculated during recursion
+    Map<GridNode, Double> costMap;
+
+    public IterativeDeepeningAStar(GridNode endNode, MapGrid mapGrid, IUpdateView viewUpdater, Double D, Double D2) {
         this.target = endNode;
         this.mapGrid = mapGrid;
         this.viewUpdater = viewUpdater;
         this.heuristic = mapGrid.getHeuristic();
+        this.costMap = new HashMap<>();
+        // Adjust heuristic : based on debugging IDA* works with larger values than JPS?
+        IHeuristic iHeuristic = mapGrid.getHeuristic();
+        if (iHeuristic instanceof DiagonalHeuristic) {
+            DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic)iHeuristic;
+            diagonalHeuristic.setD(D);
+            diagonalHeuristic.setD2(D2);
+        }
+        if (iHeuristic instanceof ManhattanHeuristic) {
+            ManhattanHeuristic manhattanHeuristic = (ManhattanHeuristic)iHeuristic;
+            manhattanHeuristic.setD(D);
+        }
+
     }
 
     public Stack<GridNode> idaStar(GridNode root) {
@@ -109,12 +125,14 @@ public class IterativeDeepeningAStar {
         List<GridNode> successors = successors(node);
         for (GridNode succ : successors) {
             if (!path.contains(succ) && !succ.isChecked()) {
-            // if (!path.contains(succ)) {
                 path.push(succ);
-                mapGrid.getGrid()[succ.getX()][succ.getY()].setSearching(true);
                 mapGrid.getGrid()[succ.getX()][succ.getY()].setChecked(true);
-                Double t = search(path, g + heuristic.cost(node, succ), bound);
-                mapGrid.getGrid()[succ.getX()][succ.getY()].setSearching(false);
+                // Store the g value to the cost map if it is not there or if this is shorter path
+                Double newG = g + heuristic.cost(node, succ);
+                if (!this.costMap.containsKey(succ) || this.costMap.get(succ) > newG) {
+                    this.costMap.put(succ, newG);
+                }
+                Double t = search(path, newG, bound);
                 if (t == Double.MIN_VALUE) {
                     return Double.MIN_VALUE;    // == FOUND!
                 }
@@ -137,8 +155,13 @@ public class IterativeDeepeningAStar {
     }
 
     private List<GridNode> successors(GridNode node) {
-        List<GridNode> gridNodes = mapGrid.getGridNodesSortedByDistance(node, target);
-        return gridNodes;
+        // This should be able to calculate
+        // successors(node)  node expanding function, expand nodes ordered by g + h(node)
+        // List<GridNode> gridNodes = mapGrid.getGridNodesSortedByDistanceToTarget(node, target);
+        List<GridNode> neighbours = mapGrid.getGridNodesNonBlockedNeighbours(node);
+        GridNodeComparator gridNodeComparator = new GridNodeComparator(target, heuristic, costMap);
+        neighbours.sort(gridNodeComparator);
+        return neighbours;
     }
 
     private void clearVisited() {

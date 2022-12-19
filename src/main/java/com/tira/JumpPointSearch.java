@@ -13,9 +13,21 @@ public class JumpPointSearch {
 
     private final IUpdateView viewUpdater;
 
-    public JumpPointSearch(MapGrid mapGrid, IUpdateView viewUpdater) {
+    public JumpPointSearch(MapGrid mapGrid, IUpdateView viewUpdater, Double D, Double D2) {
         this.mapGrid = mapGrid;
         this.viewUpdater = viewUpdater;
+        // TODO: adjust heuristic : based on debugging JPS works with D=1.5 and D2=1.5
+        // Now: force suitable values
+        IHeuristic iHeuristic = mapGrid.getHeuristic();
+        if (iHeuristic instanceof DiagonalHeuristic) {
+            DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic)iHeuristic;
+            diagonalHeuristic.setD(D);
+            diagonalHeuristic.setD2(D2);
+        }
+        if (iHeuristic instanceof ManhattanHeuristic) {
+            ManhattanHeuristic manhattanHeuristic = (ManhattanHeuristic)iHeuristic;
+            manhattanHeuristic.setD(D);
+        }
     }
 
     public Queue<GridNode> search(GridNode start, GridNode goal) {
@@ -67,6 +79,7 @@ public class JumpPointSearch {
         }
         log.debug("No more entries, failed to find");
         // failed to find a path
+        mapGrid.clearVisited();
         return null;
     }
 
@@ -127,7 +140,7 @@ public class JumpPointSearch {
         GridNode parent = parentMap.get(node);
         if (parent == null) {
             // add all non blocked neighbours
-            neighbours.addAll(mapGrid.getGridNodesSortedByDistance(node, goal));
+            neighbours.addAll(mapGrid.getGridNodesSortedByDistanceToTarget(node, goal));
             // log.debug("No parent, adding neighbours of {}: {}", node, neighbours);
         } else {
             // add suitable neighbours based on parent
@@ -260,6 +273,7 @@ public class JumpPointSearch {
             }
             node = parentMap.get(node);
         }
+        mapGrid.clearVisited();
         return path;
     }
 }
