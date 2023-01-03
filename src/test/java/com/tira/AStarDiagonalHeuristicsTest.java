@@ -1,0 +1,186 @@
+package com.tira;
+
+import lombok.extern.log4j.Log4j2;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Stack;
+
+@Log4j2
+class AStarDiagonalHeuristicsTest {
+
+    private class DummyUpdater implements IUpdateView {
+
+        @Override
+        public void updateView() {
+            return;
+        }
+    }
+
+    private MapGrid mapGrid;
+
+
+    private static String fileName = "London_2_512.map";
+
+    @BeforeEach
+    void setUp() {
+        OctileHeader octileHeader = new OctileHeader();
+        IHeuristic iHeuristic = new DiagonalHeuristic();
+        MapFileReader mapFileReader = new MapFileReader(
+                fileName,
+                octileHeader,
+                iHeuristic);
+        mapGrid = mapFileReader.getMapGrid();
+        log.debug("Read the file {}", fileName);
+    }
+
+
+    @Test
+    void aStar() {
+        DummyUpdater dummyUpdater = new DummyUpdater();
+        GridNode startNode = new GridNode(360, 500);
+        GridNode endNode = new GridNode(100, 100);
+        AStar aStar = new AStar(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
+        Long startStamp = System.nanoTime();
+        Stack<GridNode> path = aStar.a_star(startNode, endNode, 0.0);
+        Long endStamp = System.nanoTime();
+        Long duration = endStamp - startStamp;
+        Assertions.assertNotNull(path);
+        if (path != null) {
+            log.debug("Found in {} ms : path len {} ({} ns)", duration / 1000000, path.size(), duration);
+        } else {
+            log.debug("Failed in {} : path len {} ms ({})", duration / 1000000, path.size(), duration);
+        }
+    }
+
+    @Test
+    void aStarWithDifferentHeuristicValues() {
+        DummyUpdater dummyUpdater = new DummyUpdater();
+        GridNode startNode = new GridNode(360, 500);
+        GridNode endNode = new GridNode(100, 100);
+        AStar aStar = new AStar(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
+        Long startStamp = System.nanoTime();
+        Stack<GridNode> path = aStar.a_star(startNode, endNode, 0.0);
+        Long endStamp = System.nanoTime();
+        Long duration = endStamp - startStamp;
+        Assertions.assertNotNull(path);
+        if (path != null) {
+            log.debug("Found in {} ms : path len {} ({} ns)", duration / 1000000, path.size(), duration);
+        } else {
+            log.debug("Failed in {} : path len {} ms ({})", duration / 1000000, path.size(), duration);
+        }
+        IHeuristic heuristic = mapGrid.getHeuristic();
+        if (heuristic instanceof DiagonalHeuristic) {
+            // Try different values for D and D2
+            DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
+            runOneTest(1.2, 1.2, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.5, 1.5, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(2.0, 2.0, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(3.0, 2.0, aStar, diagonalHeuristic, startNode, endNode);
+        }
+    }
+
+    @Test
+    void aStarWithDifferentHeuristicValuesShortPath() {
+        DummyUpdater dummyUpdater = new DummyUpdater();
+        GridNode startNode = new GridNode(220, 120);
+        GridNode endNode = new GridNode(100, 100);
+        AStar aStar = new AStar(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
+        Long startStamp = System.nanoTime();
+        Stack<GridNode> path = aStar.a_star(startNode, endNode, 0.0);
+        Long endStamp = System.nanoTime();
+        Long duration = endStamp - startStamp;
+        Assertions.assertNotNull(path);
+        if (path != null) {
+            log.debug("Found in {} ms : path len {} ({} ns)", duration / 1000000, path.size(), duration);
+        } else {
+            log.debug("Failed in {} : path len {} ms ({})", duration / 1000000, path.size(), duration);
+        }
+        IHeuristic heuristic = mapGrid.getHeuristic();
+        if (heuristic instanceof DiagonalHeuristic) {
+            // Try different values for D and D2
+            DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
+            runOneTest(1.2, 1.2, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.5, 1.5, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(2.0, 2.0, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(3.0, 2.0, aStar, diagonalHeuristic, startNode, endNode);
+        }
+    }
+
+
+    private void runOneTest(Double D, Double D2, AStar aStar, DiagonalHeuristic diagonalHeuristic, GridNode startNode, GridNode goal) {
+        diagonalHeuristic.setD(D);
+        diagonalHeuristic.setD2(D2);
+        mapGrid.clearVisited();
+        Long startStamp = System.nanoTime();
+        Stack<GridNode> path = aStar.a_star(startNode, goal, 0.0);
+        Long endStamp = System.nanoTime();
+        Long duration = endStamp - startStamp;
+        Assertions.assertNotNull(path);
+        if (path != null) {
+            log.debug("D {}, D2 {} Found in {} ms : path len {} ({} ns)", D, D2, duration / 1000000, path.size(), duration);
+        } else {
+            log.debug("D {}, D2 {} Failed in {} ms : path len {} ({} ns)", D, D2, duration / 1000000, path.size(), duration);
+        }
+
+    }
+
+    @Test
+    void aStarWithDifferentHeuristicValuesLongPath() {
+        DummyUpdater dummyUpdater = new DummyUpdater();
+        GridNode startNode = new GridNode(10, 20);
+        GridNode endNode = new GridNode(505, 505);
+        AStar aStar = new AStar(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
+        Long startStamp = System.nanoTime();
+        Stack<GridNode> path = aStar.a_star(startNode, endNode, 0.0);
+        Long endStamp = System.nanoTime();
+        Long duration = endStamp - startStamp;
+        Assertions.assertNotNull(path);
+        if (path != null) {
+            log.debug("Found in {} ms : path len {} ({} ns)", duration / 1000000, path.size(), duration);
+        } else {
+            log.debug("Failed in {} : path len {} ms ({})", duration / 1000000, path.size(), duration);
+        }
+        IHeuristic heuristic = mapGrid.getHeuristic();
+        if (heuristic instanceof DiagonalHeuristic) {
+            // Try different values for D and D2, there is difference in speed and the length of the route found
+            DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
+            runOneTest(0.99, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.0, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.1, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.0, 1.0, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.8, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+        }
+    }
+
+    @Test
+    void aStarWithDifferentHeuristicValuesLongPathBack() {
+        DummyUpdater dummyUpdater = new DummyUpdater();
+        GridNode startNode = new GridNode(505, 505);
+        GridNode endNode = new GridNode(10, 20);
+        AStar aStar = new AStar(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
+        Long startStamp = System.nanoTime();
+        Stack<GridNode> path = aStar.a_star(startNode, endNode, 0.0);
+        Long endStamp = System.nanoTime();
+        Long duration = endStamp - startStamp;
+        Assertions.assertNotNull(path);
+        if (path != null) {
+            log.debug("Found in {} ms : path len {} ({} ns)", duration / 1000000, path.size(), duration);
+        } else {
+            log.debug("Failed in {} : path len {} ms ({})", duration / 1000000, path.size(), duration);
+        }
+        IHeuristic heuristic = mapGrid.getHeuristic();
+        if (heuristic instanceof DiagonalHeuristic) {
+            // Try different values for D and D2, there is difference in speed and the length of the route found
+            DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
+            runOneTest(0.99, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.0, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.1, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.0, 1.0, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.8, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+        }
+    }
+
+
+}

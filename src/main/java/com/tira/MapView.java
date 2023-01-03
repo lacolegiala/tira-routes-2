@@ -30,6 +30,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.Queue;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Log4j2
 public class MapView implements IUpdateView {
@@ -63,14 +64,18 @@ public class MapView implements IUpdateView {
 
     // The initial values for heuristic multipliers;
     // now the UI can be used to change these
-    private Double jpsD = 1.5;
-    private Double jpsD2 = 1.5;
+    private Double jpsD = 1.0;
+    private Double jpsD2 = 1.4142135623731;
 
-    private Double idaD = 1.5;
-    private Double idaD2 = 2.5;
+    private Double idaD = 1.0;
+    private Double idaD2 = 1.4142135623731;
+
+    private AtomicBoolean isUpdatingUi;
 
     public MapView(MapFileReader mapFileReader) {
+        this.isUpdatingUi = new AtomicBoolean(false);
         this.mapFileReader = mapFileReader;
+
         writableImage = new WritableImage(mapFileReader.getMapGrid().getSizeX(),
                 mapFileReader.getMapGrid().getSizeY()
         );
@@ -84,12 +89,9 @@ public class MapView implements IUpdateView {
         gridPane.setHgap(5);
 
         vboxInputFields = addInputFields();
-        // zoomPane = createZoomPane(vboxImage);  skip zooming for now
-        // GridPane.setRowIndex(zoomPane, 0);
         GridPane.setRowIndex(vboxImage, 0);
         GridPane.setRowIndex(vboxInputFields, 1);
 
-        // gridPane.getChildren().addAll(zoomPane, vboxInputFields);
         gridPane.getChildren().addAll(vboxImage, vboxInputFields);
     }
 
@@ -316,15 +318,16 @@ public class MapView implements IUpdateView {
             showEndpoints();
         });
 
+
         GridPane gridButtons = new GridPane();
         gridButtons.setPadding(new Insets(10, 10, 10, 10));
         Button jpsSearch = new Button("JPS");
         jpsSearch.setOnAction(event -> findRouteJPS());
         //Defining the Find button
-        Button idaSearch = new Button("IDA*");
+        Button idaSearch = new Button("A*");
         GridPane.setConstraints(idaSearch, 1, 2);
 
-        idaSearch.setOnAction(event -> findRoute());
+        idaSearch.setOnAction(event -> findRouteAStar());
 
         GridPane.setConstraints(jpsSearch, 0, 0);
         GridPane.setConstraints(jlD, 1, 0);  // column 1, row 0 D
@@ -394,6 +397,10 @@ public class MapView implements IUpdateView {
                 }
                 if (mapFileReader.getMapGrid().getGrid()[x][y].isSearching()) {
                     writableImage.getPixelWriter().setColor(x, y, Color.CYAN);
+                }
+
+                if (mapFileReader.getMapGrid().getGrid()[x][y].isChecked()) {
+                    // writableImage.getPixelWriter().setColor(x, y, Color.VIOLET);
                 }
                 if (found && route != null) {
                     GridNode testNode = new GridNode(x, y, NodeType.FREE);
@@ -476,6 +483,39 @@ public class MapView implements IUpdateView {
         new Thread(task).start();
     }
 
+    private void findRouteAStar() {
+        found = false;
+        route = null;
+        GridNode goal = new GridNode(targetX, targetY, NodeType.FREE);
+        log.debug("finding route to {}", goal);
+
+        AStar aStar = new AStar(mapFileReader.getMapGrid(), this, idaD, idaD2);
+
+        GridNode start = new GridNode(startX, startY, NodeType.FREE);
+
+        isFinding = true;
+        Task task = new Task<Void>() {
+
+            @Override
+            public Void call() {
+                Stack<GridNode> path = aStar.a_star(start, goal, 0.0);
+                if (path != null) {
+                    found = true;
+                    route = path;
+                    log.debug("Found: route {}", route);
+                    updateView();
+                }
+                return null;
+            }
+        };
+        task.setOnSucceeded(event -> {
+            isFinding = false;
+            clearTemporarySearchData();
+        });
+        new Thread(task).start();
+    }
+
+
 
     private void findRouteJPS() {
         foundJPS = false;
@@ -512,9 +552,12 @@ public class MapView implements IUpdateView {
 
     @Override
     public void updateView() {
-        Platform.runLater(() -> {
-            showEndpoints();
-        });
+        if (!isUpdatingUi.compareAndExchange(false, true)) {
+            Platform.runLater(() -> {
+                showEndpoints();
+                isUpdatingUi.set(false);
+            });
+        }
     }
 
 }

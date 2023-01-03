@@ -4,16 +4,16 @@ package com.tira;
 // for inspiration
 public class DiagonalHeuristic implements IHeuristic {
     Double D = 1.5;
-    Double D2 = 1.5;
+    Double D2 = Math.sqrt(2);
 
     @Override
     public Double heuristic(GridNode n1, GridNode n2) {
         int dx = Math.abs(n1.getX() - n2.getX());
         int dy = Math.abs(n1.getY() - n2.getY());
         if (dx > dy) {
-            return (D * (dx-dy) + D2 * dy);
+            return ((dx-dy) + D2 * dy);
         } else {
-            return (D * (dy-dx) + D2 * dx);
+            return ((dy-dx) + D2 * dx);
         }
     }
 
