@@ -16,7 +16,7 @@ public class MapApplication extends Application {
         IHeuristic iHeuristic = new DiagonalHeuristic();
 
         MapFileReader mapFileReader = new MapFileReader(
-                "NewYork_2_256.map",
+                "London_2_512.map",
                 octileHeader,
                 iHeuristic);
 

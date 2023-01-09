@@ -20,7 +20,6 @@ class AStarDiagonalHeuristicsTest {
 
     private MapGrid mapGrid;
 
-
     private static String fileName = "London_2_512.map";
 
     @BeforeEach
@@ -34,7 +33,6 @@ class AStarDiagonalHeuristicsTest {
         mapGrid = mapFileReader.getMapGrid();
         log.debug("Read the file {}", fileName);
     }
-
 
     @Test
     void aStar() {
@@ -74,10 +72,10 @@ class AStarDiagonalHeuristicsTest {
         if (heuristic instanceof DiagonalHeuristic) {
             // Try different values for D and D2
             DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
-            runOneTest(1.2, 1.2, aStar, diagonalHeuristic, startNode, endNode);
-            runOneTest(1.5, 1.5, aStar, diagonalHeuristic, startNode, endNode);
-            runOneTest(2.0, 2.0, aStar, diagonalHeuristic, startNode, endNode);
-            runOneTest(3.0, 2.0, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.99, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.1, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.0, 1.0, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.8, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
         }
     }
 
@@ -101,10 +99,10 @@ class AStarDiagonalHeuristicsTest {
         if (heuristic instanceof DiagonalHeuristic) {
             // Try different values for D and D2
             DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
-            runOneTest(1.2, 1.2, aStar, diagonalHeuristic, startNode, endNode);
-            runOneTest(1.5, 1.5, aStar, diagonalHeuristic, startNode, endNode);
-            runOneTest(2.0, 2.0, aStar, diagonalHeuristic, startNode, endNode);
-            runOneTest(3.0, 2.0, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.99, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.1, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.0, 1.0, aStar, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.8, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
         }
     }
 
@@ -147,7 +145,6 @@ class AStarDiagonalHeuristicsTest {
             // Try different values for D and D2, there is difference in speed and the length of the route found
             DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
             runOneTest(0.99, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
-            runOneTest(1.0, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
             runOneTest(1.1, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
             runOneTest(1.0, 1.0, aStar, diagonalHeuristic, startNode, endNode);
             runOneTest(0.8, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
@@ -175,12 +172,10 @@ class AStarDiagonalHeuristicsTest {
             // Try different values for D and D2, there is difference in speed and the length of the route found
             DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
             runOneTest(0.99, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
-            runOneTest(1.0, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
             runOneTest(1.1, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
             runOneTest(1.0, 1.0, aStar, diagonalHeuristic, startNode, endNode);
             runOneTest(0.8, 1.4142135623731, aStar, diagonalHeuristic, startNode, endNode);
         }
     }
-
 
 }

@@ -7,7 +7,7 @@ class GridNodeComparatorTest {
 
     @Test
     void compare() {
-        IHeuristic iHeuristic = new ManhattanHeuristic();
+        IHeuristic iHeuristic = new DiagonalHeuristic();
         GridNode target = new GridNode(20,20,NodeType.FREE);
         GridNodeComparator gridNodeComparator = new GridNodeComparator(target, iHeuristic);
         GridNode closer = new GridNode(25,25,NodeType.FREE);
@@ -16,6 +16,5 @@ class GridNodeComparatorTest {
         Assertions.assertEquals(gridNodeComparator.compare(closer, further), -1);
         Assertions.assertEquals(gridNodeComparator.compare(closer, closer), 0);
         Assertions.assertEquals(gridNodeComparator.compare(further, closer), 1);
-
     }
 }

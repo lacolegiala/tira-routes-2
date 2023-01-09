@@ -42,7 +42,6 @@ class DirectionTest {
         Assertions.assertEquals(Direction.directionV(c, se), Direction.DIRECTION.S);
         Assertions.assertEquals(Direction.directionV(c, nw), Direction.DIRECTION.N);
         Assertions.assertEquals(Direction.directionV(c, sw), Direction.DIRECTION.S);
-
     }
 
     @Test

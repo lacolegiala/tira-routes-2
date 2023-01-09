@@ -14,7 +14,7 @@ class MapGridTest {
     @BeforeEach
     void setUp() {
         OctileHeader octileHeader = new OctileHeader();
-        IHeuristic iHeuristic = new ManhattanHeuristic();
+        IHeuristic iHeuristic = new DiagonalHeuristic();
         MapFileReader mapFileReader = new MapFileReader(
                 fileName,
                 octileHeader,
@@ -38,7 +38,6 @@ class MapGridTest {
     void getTraversableNode() {
         // 100, 100 should be traversable (=free node) in London_2_512.map
         Assertions.assertNotNull(mapGrid.getNode(100, 100));
-
     }
 
     @Test

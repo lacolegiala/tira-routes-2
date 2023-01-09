@@ -34,7 +34,7 @@ class JumpPointSearchDiagonalHeuristicTest {
                 iHeuristic);
         mapGrid = mapFileReader.getMapGrid();
         log.debug("Read the file {}", fileName);
-        jumpPointSearch = new JumpPointSearch(mapGrid, dummyUpdater, 1.5, 1.5);
+        jumpPointSearch = new JumpPointSearch(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
     }
 
     @Test
@@ -69,10 +69,10 @@ class JumpPointSearchDiagonalHeuristicTest {
         if (heuristic instanceof DiagonalHeuristic) {
             // Try different values for D and D2
             DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
-            runOneTest(1.2, 1.2, diagonalHeuristic, startNode, endNode);
-            runOneTest(1.5, 1.5, diagonalHeuristic, startNode, endNode);
-            runOneTest(2.0, 2.0, diagonalHeuristic, startNode, endNode);
-            runOneTest(3.0, 2.0, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.99, 1.4142135623731, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.1, 1.4142135623731, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.0, 1.0, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.8, 1.4142135623731, diagonalHeuristic, startNode, endNode);
         }
     }
 
@@ -81,7 +81,7 @@ class JumpPointSearchDiagonalHeuristicTest {
         DummyUpdater dummyUpdater = new DummyUpdater();
         GridNode startNode = new GridNode(220, 120);
         GridNode endNode = new GridNode(100, 100);
-        jumpPointSearch = new JumpPointSearch(mapGrid, dummyUpdater, 1.5, 1.5);
+        jumpPointSearch = new JumpPointSearch(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
         Long startStamp = System.nanoTime();
         Queue<GridNode> path = jumpPointSearch.search(startNode, endNode);
         Long endStamp = System.nanoTime();
@@ -96,10 +96,10 @@ class JumpPointSearchDiagonalHeuristicTest {
         if (heuristic instanceof DiagonalHeuristic) {
             // Try different values for D and D2
             DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
-            runOneTest(1.2, 1.2, diagonalHeuristic, startNode, endNode);
-            runOneTest(1.5, 1.5, diagonalHeuristic, startNode, endNode);
-            runOneTest(2.0, 2.0, diagonalHeuristic, startNode, endNode);
-            runOneTest(3.0, 2.0, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.99, 1.4142135623731, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.1, 1.4142135623731, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.0, 1.0, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.8, 1.4142135623731, diagonalHeuristic, startNode, endNode);
         }
     }
 
@@ -126,7 +126,7 @@ class JumpPointSearchDiagonalHeuristicTest {
         DummyUpdater dummyUpdater = new DummyUpdater();
         GridNode startNode = new GridNode(10, 20);
         GridNode endNode = new GridNode(505, 505);
-        jumpPointSearch = new JumpPointSearch(mapGrid, dummyUpdater, 1.5, 1.5);
+        jumpPointSearch = new JumpPointSearch(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
         Long startStamp = System.nanoTime();
         Queue<GridNode> path = jumpPointSearch.search(startNode, endNode);
         Long endStamp = System.nanoTime();
@@ -141,10 +141,10 @@ class JumpPointSearchDiagonalHeuristicTest {
         if (heuristic instanceof DiagonalHeuristic) {
             // Try different values for D and D2
             DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic) heuristic;
-            runOneTest(1.2, 1.2, diagonalHeuristic, startNode, endNode);
-            runOneTest(1.5, 1.5, diagonalHeuristic, startNode, endNode);
-            runOneTest(2.0, 2.0, diagonalHeuristic, startNode, endNode);
-            runOneTest(3.0, 2.0, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.99, 1.4142135623731, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.1, 1.4142135623731, diagonalHeuristic, startNode, endNode);
+            runOneTest(1.0, 1.0, diagonalHeuristic, startNode, endNode);
+            runOneTest(0.8, 1.4142135623731, diagonalHeuristic, startNode, endNode);
         }
     }
 }
