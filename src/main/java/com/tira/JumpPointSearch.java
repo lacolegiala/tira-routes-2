@@ -238,7 +238,7 @@ public class JumpPointSearch {
                 }
             } else {
                 if ((mapGrid.isTraversableNode(node.getX() + 1, node.getY() + dy) && !mapGrid.isTraversableNode(node.getX() + 1, node.getY())) ||
-                        (mapGrid.isTraversableNode(node.getX() - 1, node.getY()) && !mapGrid.isTraversableNode(node.getX() - 1, node.getY()))) {
+                        (mapGrid.isTraversableNode(node.getX() - 1, node.getY() + dy) && !mapGrid.isTraversableNode(node.getX() - 1, node.getY()))) {
                     return node;
                 }
             }

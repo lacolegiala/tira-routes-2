@@ -3,7 +3,7 @@ package com.tira;
 import java.util.List;
 
 public class OctileHeader implements IMapHeader{
-    private boolean isoctile = false;
+    private boolean isOctile = false;
     private int height;
     private int width;
     public int getHeight() {
@@ -16,7 +16,7 @@ public class OctileHeader implements IMapHeader{
                 hdrLines.get(3).compareTo("map") == 0
         ) {
             System.out.println("This is octile header");
-            this.isoctile = true;
+            this.isOctile = true;
             // read the dimensions
             String[] dLine = hdrLines.get(1).split(" ");
             if (dLine[0].compareTo("height") == 0) {
@@ -27,7 +27,7 @@ public class OctileHeader implements IMapHeader{
                 this.width = Integer.valueOf(dLine[1]);
             }
         }
-        return isoctile;
+        return isOctile;
     }
 
     @Override

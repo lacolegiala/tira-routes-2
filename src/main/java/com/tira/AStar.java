@@ -33,7 +33,6 @@ public class AStar {
             ManhattanHeuristic manhattanHeuristic = (ManhattanHeuristic)iHeuristic;
             manhattanHeuristic.setD(D);
         }
-
     }
 
     public Stack<GridNode> reconstructPath(Map<GridNode, GridNode> cameFrom, GridNode current) {
@@ -72,7 +71,7 @@ public class AStar {
             List<GridNode> neighbors = neighbors(current, goal, fScore);
             for (GridNode neighbor : neighbors) {
                 if (closedSet.contains(neighbor)) {
-                    // alerady handled?
+                    // already handled?
                     continue;
                 }
                 Double tentativeGScore = gScore.get(current) + heuristic.cost(current, neighbor);

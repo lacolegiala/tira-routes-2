@@ -236,14 +236,12 @@ public class MapGrid {
         return neighbours;
     }
 
-
     public List<GridNode> getGridNodesSortedByDistanceToTarget(GridNode node, GridNode target) {
         List<GridNode> neighbours = getGridNodesNonBlockedNeighbours(node);
         GridNodeComparator gridNodeComparator = new GridNodeComparator(target, getHeuristic());
         neighbours.sort(gridNodeComparator);
         return neighbours;
     }
-
 
     public int getSizeX() {
         return sizeX;

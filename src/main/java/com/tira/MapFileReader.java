@@ -24,7 +24,6 @@ public class MapFileReader {
             }
             // Assume the file contains the header provided
             if (mapHeader.isValidHeader(headerLines)) {
-                // System.out.println("map: height: "+mapHeader.getHeight() + " width "+mapHeader.getWidth());
                 log.debug("map:height {}, width {}", mapHeader.getHeight(), mapHeader.getWidth());
                 // then read the rest of the stuff....assuming there are mapHeader.getHeight() lines
                 // containing mapHeader.getWidth() characters that define the free and blocked cells

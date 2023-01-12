@@ -24,7 +24,6 @@ public class GridNodeComparator implements Comparator<GridNode> {
         this.mapG = mapG;
     }
 
-
     @Override
     // Note: compares only the coordinates related to target, not whether the nodes are equal objects
     public int compare(GridNode o1, GridNode o2) {
