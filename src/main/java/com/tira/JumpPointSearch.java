@@ -6,8 +6,10 @@ import java.util.*;
 
 // Used http://users.cecs.anu.edu.au/~dharabor/data/papers/harabor-grastien-aaai11.pdf
 // as specification, and used also https://github.com/kevinsheehan/jps for sample code (should the MIT license be copied here?)
-@Log4j2
 public class JumpPointSearch {
+
+    private static final org.apache.logging.log4j.Logger log
+            = org.apache.logging.log4j.LogManager.getLogger(JumpPointSearch.class);
 
     private final MapGrid mapGrid;
 
@@ -65,14 +67,11 @@ public class JumpPointSearch {
         while (!open.isEmpty()) {
             // pop the position of node which has the shortest estimated total length
             GridNode node = open.poll();
-            // log.debug("Adding {} to closed list , open still has {}", node, open.size());
             closed.add(node);
 
             if (goals.contains(node)) {
                 // We already found the target
                 return backtrace(node, parentMap);
-            } else {
-                // log.debug("Goals did not contain {}: {}", node, goals);
             }
             // add all possible next steps from the current node
             getSuccessors(parentMap, node, start, goal, goals, open, closed, fullPathLength, costFomStart, heuristicToGoal);
@@ -97,7 +96,6 @@ public class JumpPointSearch {
 
         List<GridNode> neighbours = prune(parentMap, node, g);
 
-        // log.debug("Found {} neighbours for {}: {}", neighbours.size(), node, neighbours);
         for (GridNode neighbour : neighbours) {
             GridNode jumpNode = jump(neighbour, node, g, goals);
 
@@ -113,7 +111,6 @@ public class JumpPointSearch {
             // or if it hasn't been opened, add to open queue open and update it
             Double oldLength = cMap.getOrDefault(jumpNode, 0d);
             if (!open.contains(jumpNode) || newLength < oldLength) {
-                // log.debug("Length to {} is {} ({} from {}, start {}, og {}", jumpNode, ng, d, node, s, og);
                 cMap.put(jumpNode, newLength);
                 hMap.put(jumpNode, mapGrid.getHeuristic().heuristic(jumpNode, g));
                 fMap.put(jumpNode, cMap.getOrDefault(jumpNode, 0d) + hMap.getOrDefault(jumpNode, 0d));
@@ -141,7 +138,6 @@ public class JumpPointSearch {
         if (parent == null) {
             // add all non blocked neighbours
             neighbours.addAll(mapGrid.getGridNodesSortedByDistanceToTarget(node, goal));
-            // log.debug("No parent, adding neighbours of {}: {}", node, neighbours);
         } else {
             // add suitable neighbours based on parent
             final int x = node.getX();
@@ -189,7 +185,6 @@ public class JumpPointSearch {
                         neighbours = addValidGridNode(neighbours, x + dx, y - 1);
                 }
             }
-            // log.debug("Pruning: Node {}, parent {}, dx: {}, dy {}: neighbours {}", node, parent, dx, dy, neighbours);
         }
         return neighbours;
     }
@@ -199,7 +194,6 @@ public class JumpPointSearch {
             return null;
         }
         if (!node.isTraversable()) {
-            // log.debug("Node {} not traversable", node);
             return null;
         }
 

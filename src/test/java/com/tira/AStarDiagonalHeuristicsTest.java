@@ -7,8 +7,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Stack;
 
-@Log4j2
 class AStarDiagonalHeuristicsTest {
+
+    private static final org.apache.logging.log4j.Logger log
+            = org.apache.logging.log4j.LogManager.getLogger(AStarDiagonalHeuristicsTest.class);
 
     private class DummyUpdater implements IUpdateView {
 

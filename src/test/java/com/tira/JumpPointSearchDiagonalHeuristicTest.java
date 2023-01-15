@@ -7,8 +7,11 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Queue;
 
-@Log4j2
 class JumpPointSearchDiagonalHeuristicTest {
+
+    private static final org.apache.logging.log4j.Logger log
+            = org.apache.logging.log4j.LogManager.getLogger(JumpPointSearchDiagonalHeuristicTest.class);
+
     private class DummyUpdater implements IUpdateView {
 
         @Override

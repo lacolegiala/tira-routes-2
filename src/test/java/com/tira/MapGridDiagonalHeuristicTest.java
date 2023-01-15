@@ -7,8 +7,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-@Log4j2
 class MapGridDiagonalHeuristicTest {
+
+    private static final org.apache.logging.log4j.Logger log
+            = org.apache.logging.log4j.LogManager.getLogger(MapGridDiagonalHeuristicTest.class);
 
     private MapGrid mapGrid;
     private static String fileName ="London_2_512.map";

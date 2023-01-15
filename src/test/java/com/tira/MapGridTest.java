@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@Log4j2
 class MapGridTest {
+
+    private static final org.apache.logging.log4j.Logger log
+            = org.apache.logging.log4j.LogManager.getLogger(MapGridTest.class);
 
     private MapGrid mapGrid;
     private static String fileName ="London_2_512.map";

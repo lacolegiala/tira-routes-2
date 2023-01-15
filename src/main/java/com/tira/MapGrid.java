@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Log4j2
 public class MapGrid {
+
+    private static final org.apache.logging.log4j.Logger log
+            = org.apache.logging.log4j.LogManager.getLogger(MapGrid.class);
     private final GridNode[][] grid;
     private final int sizeX;
     private final int sizeY;

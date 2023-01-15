@@ -32,8 +32,10 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@Log4j2
 public class MapView implements IUpdateView {
+
+    private static final org.apache.logging.log4j.Logger log
+            = org.apache.logging.log4j.LogManager.getLogger(MapView.class);
     private VBox vboxImage;
     private VBox vboxInputFields;
     private GridPane gridPane;
@@ -451,38 +453,6 @@ public class MapView implements IUpdateView {
         return gridPane;
     }
 
-    private void findRoute() {
-        found = false;
-        route = null;
-        GridNode goal = new GridNode(targetX, targetY, NodeType.FREE);
-        log.debug("finding route to {}", goal);
-
-        IterativeDeepeningAStar iterativeDeepeningAStar =
-                new IterativeDeepeningAStar(goal, mapFileReader.getMapGrid(), this, idaD, idaD2);
-        GridNode start = new GridNode(startX, startY, NodeType.FREE);
-
-        isFinding = true;
-        Task task = new Task<Void>() {
-
-            @Override
-            public Void call() {
-                Stack<GridNode> path = iterativeDeepeningAStar.idaStar(start);
-                if (path != null) {
-                    found = true;
-                    route = path;
-                    log.debug("Found: route {}", route);
-                    updateView();
-                }
-                return null;
-            }
-        };
-        task.setOnSucceeded(event -> {
-            isFinding = false;
-            clearTemporarySearchData();
-        });
-        new Thread(task).start();
-    }
-
     private void findRouteAStar() {
         found = false;
         route = null;
@@ -514,8 +484,6 @@ public class MapView implements IUpdateView {
         });
         new Thread(task).start();
     }
-
-
 
     private void findRouteJPS() {
         foundJPS = false;
@@ -549,7 +517,6 @@ public class MapView implements IUpdateView {
         new Thread(task).start();
     }
 
-
     @Override
     public void updateView() {
         if (!isUpdatingUi.compareAndExchange(false, true)) {
@@ -559,5 +526,4 @@ public class MapView implements IUpdateView {
             });
         }
     }
-
 }

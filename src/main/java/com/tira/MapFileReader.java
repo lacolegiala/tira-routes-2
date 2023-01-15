@@ -7,8 +7,10 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
-@Log4j2
 public class MapFileReader {
+
+    private static final org.apache.logging.log4j.Logger log
+            = org.apache.logging.log4j.LogManager.getLogger(MapFileReader.class);
 
     private MapGrid mapGrid;
 

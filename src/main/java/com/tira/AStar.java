@@ -1,12 +1,12 @@
 package com.tira;
 
-import lombok.extern.log4j.Log4j2;
-
 import java.util.*;
 
-@Log4j2
 // implementation based on pseudocode in https://en.wikipedia.org/wiki/A*_search_algorithm
 public class AStar {
+
+    private static final org.apache.logging.log4j.Logger log
+            = org.apache.logging.log4j.LogManager.getLogger(AStar.class);
     private MapGrid mapGrid;
 
     private IUpdateView viewUpdater;
