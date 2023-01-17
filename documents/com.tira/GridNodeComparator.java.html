@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fi"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GridNodeComparator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">jacoco.exec</a> &gt; <a href="index.source.html" class="el_package">com.tira</a> &gt; <span class="el_source">GridNodeComparator.java</span></div><h1>GridNodeComparator.java</h1><pre class="source lang-java linenums">package com.tira;
+
+import lombok.extern.log4j.Log4j2;
+
+import java.util.Comparator;
+import java.util.Map;
+
+@Log4j2
+public class GridNodeComparator implements Comparator&lt;GridNode&gt; {
+    private GridNode target;
+    private IHeuristic heuristic;
+
+    private Map&lt;GridNode, Double&gt; mapG;
+
+<span class="fc" id="L15">    public GridNodeComparator(GridNode target, IHeuristic heuristic) {</span>
+<span class="fc" id="L16">        this.target = target;</span>
+<span class="fc" id="L17">        this.heuristic = heuristic;</span>
+<span class="fc" id="L18">        this.mapG = null;</span>
+<span class="fc" id="L19">    }</span>
+
+<span class="fc" id="L21">    public GridNodeComparator(GridNode target, IHeuristic heuristic, Map&lt;GridNode, Double&gt; mapG) {</span>
+<span class="fc" id="L22">        this.target = target;</span>
+<span class="fc" id="L23">        this.heuristic = heuristic;</span>
+<span class="fc" id="L24">        this.mapG = mapG;</span>
+<span class="fc" id="L25">    }</span>
+
+    @Override
+    // Note: compares only the coordinates related to target, not whether the nodes are equal objects
+    public int compare(GridNode o1, GridNode o2) {
+<span class="fc" id="L30">        Double h1 = heuristic.heuristic(o1, target);</span>
+<span class="fc" id="L31">        Double h2 = heuristic.heuristic(o2, target);</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        if (mapG != null) {</span>
+<span class="fc bfc" id="L33" title="All 4 branches covered.">            if (mapG.containsKey(o1) &amp;&amp; mapG.containsKey(o2)) {</span>
+<span class="fc" id="L34">                Double g1 = mapG.get(o1);</span>
+<span class="fc" id="L35">                Double g2 = mapG.get(o2);</span>
+<span class="fc" id="L36">                Double f1 = g1+h1;</span>
+<span class="fc" id="L37">                Double f2 = g2+h2;</span>
+<span class="fc" id="L38">                return f1.compareTo(f2);</span>
+            }
+        }
+<span class="fc" id="L41">        return h1.compareTo(h2);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

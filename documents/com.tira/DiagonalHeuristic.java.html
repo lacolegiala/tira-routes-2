@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fi"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DiagonalHeuristic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">jacoco.exec</a> &gt; <a href="index.source.html" class="el_package">com.tira</a> &gt; <span class="el_source">DiagonalHeuristic.java</span></div><h1>DiagonalHeuristic.java</h1><pre class="source lang-java linenums">package com.tira;
+
+// Used http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html#diagonal-distance
+// for inspiration
+<span class="fc" id="L5">public class DiagonalHeuristic implements IHeuristic {</span>
+<span class="fc" id="L6">    Double D = 1.5;</span>
+<span class="fc" id="L7">    Double D2 = Math.sqrt(2);</span>
+
+    @Override
+    public Double heuristic(GridNode n1, GridNode n2) {
+<span class="fc" id="L11">        int dx = Math.abs(n1.getX() - n2.getX());</span>
+<span class="fc" id="L12">        int dy = Math.abs(n1.getY() - n2.getY());</span>
+<span class="fc bfc" id="L13" title="All 2 branches covered.">        if (dx &gt; dy) {</span>
+<span class="fc" id="L14">            return ((dx-dy) + D2 * dy);</span>
+        } else {
+<span class="fc" id="L16">            return ((dy-dx) + D2 * dx);</span>
+        }
+    }
+
+    @Override
+    public Double cost(GridNode n1, GridNode n2) {
+<span class="fc" id="L22">        int dx = Math.abs(n1.getX() - n2.getX());</span>
+<span class="fc" id="L23">        int dy = Math.abs(n1.getY() - n2.getY());</span>
+<span class="fc" id="L24">        return Double.valueOf(dx+dy);</span>
+    }
+
+    public void setD(Double d) {
+<span class="fc" id="L28">        D = d;</span>
+<span class="fc" id="L29">    }</span>
+
+    public void setD2(Double d) {
+<span class="fc" id="L32">        D2 = d;</span>
+<span class="fc" id="L33">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

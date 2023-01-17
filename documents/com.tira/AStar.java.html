@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fi"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AStar.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">jacoco.exec</a> &gt; <a href="index.source.html" class="el_package">com.tira</a> &gt; <span class="el_source">AStar.java</span></div><h1>AStar.java</h1><pre class="source lang-java linenums">package com.tira;
+
+import java.util.*;
+
+// implementation based on pseudocode in https://en.wikipedia.org/wiki/A*_search_algorithm
+public class AStar {
+
+<span class="fc" id="L8">    private static final org.apache.logging.log4j.Logger log</span>
+<span class="fc" id="L9">            = org.apache.logging.log4j.LogManager.getLogger(AStar.class);</span>
+    private MapGrid mapGrid;
+
+    private IUpdateView viewUpdater;
+
+    private IHeuristic heuristic;
+
+    private Map&lt;GridNode, GridNode&gt; cameFrom;
+    private Map&lt;GridNode, Double&gt; gScore;
+    private Map&lt;GridNode, Double&gt; fScore;
+
+<span class="fc" id="L20">    public AStar(MapGrid mapGrid, IUpdateView viewUpdater, Double D, Double D2) {</span>
+<span class="fc" id="L21">        this.mapGrid = mapGrid;</span>
+<span class="fc" id="L22">        this.viewUpdater = viewUpdater;</span>
+<span class="fc" id="L23">        this.heuristic = mapGrid.getHeuristic();</span>
+        // Adjust heuristic : based on debugging IDA* works with larger values than JPS?
+<span class="fc" id="L25">        IHeuristic iHeuristic = mapGrid.getHeuristic();</span>
+<span class="fc" id="L26">        mapGrid.clearVisited();</span>
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">        if (iHeuristic instanceof DiagonalHeuristic) {</span>
+<span class="fc" id="L28">            DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic)iHeuristic;</span>
+<span class="fc" id="L29">            diagonalHeuristic.setD(D);</span>
+<span class="fc" id="L30">            diagonalHeuristic.setD2(D2);</span>
+        }
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">        if (iHeuristic instanceof ManhattanHeuristic) {</span>
+<span class="nc" id="L33">            ManhattanHeuristic manhattanHeuristic = (ManhattanHeuristic)iHeuristic;</span>
+<span class="nc" id="L34">            manhattanHeuristic.setD(D);</span>
+        }
+<span class="fc" id="L36">    }</span>
+
+    public Stack&lt;GridNode&gt; reconstructPath(Map&lt;GridNode, GridNode&gt; cameFrom, GridNode current) {
+<span class="fc" id="L39">        Stack&lt;GridNode&gt; totalPath = new Stack&lt;&gt;();</span>
+<span class="fc" id="L40">        totalPath.add(current);</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        while (cameFrom.containsKey(current)) {</span>
+<span class="fc" id="L42">            current = cameFrom.get(current);</span>
+<span class="fc" id="L43">            totalPath.push(current);</span>
+        }
+<span class="fc" id="L45">        return totalPath;</span>
+    }
+
+    public Stack&lt;GridNode&gt; a_star(GridNode start, GridNode goal, Double h) {
+<span class="fc" id="L49">        cameFrom = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L50">        gScore = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L51">        fScore = new HashMap&lt;&gt;();</span>
+
+        // put the nodes to queue and select the shortest estimated full path from there
+<span class="fc" id="L54">        Queue&lt;GridNode&gt; openSet = new PriorityQueue&lt;&gt;((a, b) -&gt; {</span>
+            // returns the minimum full path length first
+<span class="fc" id="L56">            return Double.compare(fScore.getOrDefault(a, Double.MAX_VALUE), fScore.getOrDefault(b, Double.MAX_VALUE));</span>
+        });
+<span class="fc" id="L58">        Set&lt;GridNode&gt; closedSet = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L60">        openSet.add(start);</span>
+<span class="fc" id="L61">        gScore.put(start, 0.0);</span>
+<span class="fc" id="L62">        fScore.put(start, heuristic.heuristic(start, goal));</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        while(!openSet.isEmpty()) {</span>
+<span class="fc" id="L64">            GridNode current = openSet.poll();</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            if (current.equals(goal)) {</span>
+<span class="fc" id="L66">                return reconstructPath(cameFrom, current);</span>
+            }
+<span class="fc" id="L68">            openSet.remove(current);</span>
+<span class="fc" id="L69">            closedSet.add(current);</span>
+            // log.debug(&quot;Current is {}, openSet has {}&quot;, current, openSet.size());
+<span class="fc" id="L71">            List&lt;GridNode&gt; neighbors = neighbors(current, goal, fScore);</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            for (GridNode neighbor : neighbors) {</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">                if (closedSet.contains(neighbor)) {</span>
+                    // already handled?
+<span class="fc" id="L75">                    continue;</span>
+                }
+<span class="fc" id="L77">                Double tentativeGScore = gScore.get(current) + heuristic.cost(current, neighbor);</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                if (tentativeGScore &lt; gScore.getOrDefault(neighbor, Double.MAX_VALUE)) {</span>
+<span class="fc" id="L79">                    cameFrom.put(neighbor, current);</span>
+<span class="fc" id="L80">                    gScore.put(neighbor, tentativeGScore);</span>
+<span class="fc" id="L81">                    fScore.put(neighbor, tentativeGScore + heuristic.heuristic(neighbor, goal));</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">                    if (!openSet.contains(neighbor)) {</span>
+<span class="fc" id="L83">                        openSet.add(neighbor);</span>
+                    }
+                }
+<span class="fc" id="L86">            }</span>
+<span class="fc" id="L87">        }</span>
+<span class="nc" id="L88">        log.debug(&quot;Did not find anything&quot;);</span>
+<span class="nc" id="L89">        return null;</span>
+    }
+
+    private List&lt;GridNode&gt; neighbors(GridNode node, GridNode goal, Map&lt;GridNode, Double&gt; costMap) {
+        // List&lt;GridNode&gt; neighbours = mapGrid.getNeighbours(node);
+<span class="fc" id="L94">        List&lt;GridNode&gt; neighbours = mapGrid.getGridNodesNonBlockedNeighbours(node);</span>
+<span class="fc" id="L95">        GridNodeComparator gridNodeComparator = new GridNodeComparator(goal, heuristic, costMap);</span>
+<span class="fc" id="L96">        neighbours.sort(gridNodeComparator);</span>
+<span class="fc" id="L97">        return neighbours;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

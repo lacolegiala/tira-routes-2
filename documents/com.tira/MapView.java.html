@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fi"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MapView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">jacoco.exec</a> &gt; <a href="index.source.html" class="el_package">com.tira</a> &gt; <span class="el_source">MapView.java</span></div><h1>MapView.java</h1><pre class="source lang-java linenums">package com.tira;
+
+import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
+import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.math.NumberUtils;
+
+import java.util.Queue;
+import java.util.Stack;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class MapView implements IUpdateView {
+
+<span class="nc" id="L37">    private static final org.apache.logging.log4j.Logger log</span>
+<span class="nc" id="L38">            = org.apache.logging.log4j.LogManager.getLogger(MapView.class);</span>
+    private VBox vboxImage;
+    private VBox vboxInputFields;
+    private GridPane gridPane;
+
+    private WritableImage writableImage;
+
+    private ImageView imageView;
+
+    private ScrollPane zoomPane;
+
+    private MapFileReader mapFileReader;
+
+<span class="nc" id="L51">    private int startX = 0;</span>
+<span class="nc" id="L52">    private int startY = 0;</span>
+
+<span class="nc" id="L54">    private int targetX = 0;</span>
+<span class="nc" id="L55">    private int targetY = 0;</span>
+
+<span class="nc" id="L57">    private boolean isFinding = false;</span>
+
+<span class="nc" id="L59">    private boolean found = false;</span>
+
+<span class="nc" id="L61">    private Stack&lt;GridNode&gt; route = null;</span>
+
+<span class="nc" id="L63">    private Queue&lt;GridNode&gt; routeJPS = null;</span>
+
+<span class="nc" id="L65">    private boolean foundJPS = false;</span>
+
+    // The initial values for heuristic multipliers;
+    // now the UI can be used to change these
+<span class="nc" id="L69">    private Double jpsD = 1.0;</span>
+<span class="nc" id="L70">    private Double jpsD2 = 1.4142135623731;</span>
+
+<span class="nc" id="L72">    private Double idaD = 1.0;</span>
+<span class="nc" id="L73">    private Double idaD2 = 1.4142135623731;</span>
+
+    private AtomicBoolean isUpdatingUi;
+
+<span class="nc" id="L77">    public MapView(MapFileReader mapFileReader) {</span>
+<span class="nc" id="L78">        this.isUpdatingUi = new AtomicBoolean(false);</span>
+<span class="nc" id="L79">        this.mapFileReader = mapFileReader;</span>
+
+<span class="nc" id="L81">        writableImage = new WritableImage(mapFileReader.getMapGrid().getSizeX(),</span>
+<span class="nc" id="L82">                mapFileReader.getMapGrid().getSizeY()</span>
+        );
+
+<span class="nc" id="L85">        setImage(mapFileReader.getMapGrid());</span>
+<span class="nc" id="L86">        imageView = new ImageView(writableImage);</span>
+<span class="nc" id="L87">        vboxImage = new VBox(imageView);</span>
+<span class="nc" id="L88">        gridPane = new GridPane();</span>
+<span class="nc" id="L89">        gridPane.setPadding(new Insets(10, 10, 10, 10));</span>
+<span class="nc" id="L90">        gridPane.setVgap(5);</span>
+<span class="nc" id="L91">        gridPane.setHgap(5);</span>
+
+<span class="nc" id="L93">        vboxInputFields = addInputFields();</span>
+<span class="nc" id="L94">        GridPane.setRowIndex(vboxImage, 0);</span>
+<span class="nc" id="L95">        GridPane.setRowIndex(vboxInputFields, 1);</span>
+
+<span class="nc" id="L97">        gridPane.getChildren().addAll(vboxImage, vboxInputFields);</span>
+<span class="nc" id="L98">    }</span>
+
+    // LATER: zoom seems to slow the UI a lot...
+    private ScrollPane createZoomPane(final VBox vbox) {
+<span class="nc" id="L102">        final double SCALE_DELTA = 1.1;</span>
+<span class="nc" id="L103">        final StackPane zoomPane = new StackPane();</span>
+
+<span class="nc" id="L105">        zoomPane.getChildren().add(vbox);</span>
+
+<span class="nc" id="L107">        final ScrollPane scroller = new ScrollPane();</span>
+<span class="nc" id="L108">        final Group scrollContent = new Group(zoomPane);</span>
+<span class="nc" id="L109">        scroller.setContent(scrollContent);</span>
+
+<span class="nc" id="L111">        scroller.viewportBoundsProperty().addListener(new ChangeListener&lt;Bounds&gt;() {</span>
+            @Override
+            public void changed(ObservableValue&lt;? extends Bounds&gt; observable,
+                                Bounds oldValue, Bounds newValue) {
+<span class="nc" id="L115">                zoomPane.setMinSize(newValue.getWidth(), newValue.getHeight());</span>
+<span class="nc" id="L116">            }</span>
+        });
+
+<span class="nc" id="L119">        scroller.setPrefViewportWidth(this.startX);</span>
+<span class="nc" id="L120">        scroller.setPrefViewportHeight(this.startY);</span>
+
+<span class="nc" id="L122">        zoomPane.setOnScroll(new EventHandler&lt;ScrollEvent&gt;() {</span>
+            @Override
+            public void handle(ScrollEvent event) {
+<span class="nc" id="L125">                event.consume();</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                if (event.getDeltaY() == 0) {</span>
+<span class="nc" id="L128">                    return;</span>
+                }
+
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                double scaleFactor = (event.getDeltaY() &gt; 0) ? SCALE_DELTA</span>
+<span class="nc" id="L132">                        : 1 / SCALE_DELTA;</span>
+
+                // amount of scrolling in each direction in scrollContent coordinate
+                // units
+<span class="nc" id="L136">                Point2D scrollOffset = figureScrollOffset(scrollContent, scroller);</span>
+
+<span class="nc" id="L138">                vbox.setScaleX(vbox.getScaleX() * scaleFactor);</span>
+<span class="nc" id="L139">                vbox.setScaleY(vbox.getScaleY() * scaleFactor);</span>
+
+                // move viewport so that old center remains in the center after the
+                // scaling
+<span class="nc" id="L143">                repositionScroller(scrollContent, scroller, scaleFactor, scrollOffset);</span>
+
+<span class="nc" id="L145">            }</span>
+        });
+
+        // Panning via drag....
+<span class="nc" id="L149">        final ObjectProperty&lt;Point2D&gt; lastMouseCoordinates = new SimpleObjectProperty&lt;Point2D&gt;();</span>
+<span class="nc" id="L150">        scrollContent.setOnMousePressed(new EventHandler&lt;MouseEvent&gt;() {</span>
+            @Override
+            public void handle(MouseEvent event) {
+<span class="nc" id="L153">                lastMouseCoordinates.set(new Point2D(event.getX(), event.getY()));</span>
+<span class="nc" id="L154">            }</span>
+        });
+
+<span class="nc" id="L157">        scrollContent.setOnMouseDragged(new EventHandler&lt;MouseEvent&gt;() {</span>
+            @Override
+            public void handle(MouseEvent event) {
+<span class="nc" id="L160">                double deltaX = event.getX() - lastMouseCoordinates.get().getX();</span>
+<span class="nc" id="L161">                double extraWidth = scrollContent.getLayoutBounds().getWidth() - scroller.getViewportBounds().getWidth();</span>
+<span class="nc" id="L162">                double deltaH = deltaX * (scroller.getHmax() - scroller.getHmin()) / extraWidth;</span>
+<span class="nc" id="L163">                double desiredH = scroller.getHvalue() - deltaH;</span>
+<span class="nc" id="L164">                scroller.setHvalue(Math.max(0, Math.min(scroller.getHmax(), desiredH)));</span>
+
+<span class="nc" id="L166">                double deltaY = event.getY() - lastMouseCoordinates.get().getY();</span>
+<span class="nc" id="L167">                double extraHeight = scrollContent.getLayoutBounds().getHeight() - scroller.getViewportBounds().getHeight();</span>
+<span class="nc" id="L168">                double deltaV = deltaY * (scroller.getHmax() - scroller.getHmin()) / extraHeight;</span>
+<span class="nc" id="L169">                double desiredV = scroller.getVvalue() - deltaV;</span>
+<span class="nc" id="L170">                scroller.setVvalue(Math.max(0, Math.min(scroller.getVmax(), desiredV)));</span>
+<span class="nc" id="L171">            }</span>
+        });
+
+<span class="nc" id="L174">        return scroller;</span>
+    }
+
+    private Point2D figureScrollOffset(Node scrollContent, ScrollPane scroller) {
+<span class="nc" id="L178">        double extraWidth = scrollContent.getLayoutBounds().getWidth() - scroller.getViewportBounds().getWidth();</span>
+<span class="nc" id="L179">        double hScrollProportion = (scroller.getHvalue() - scroller.getHmin()) / (scroller.getHmax() - scroller.getHmin());</span>
+<span class="nc" id="L180">        double scrollXOffset = hScrollProportion * Math.max(0, extraWidth);</span>
+<span class="nc" id="L181">        double extraHeight = scrollContent.getLayoutBounds().getHeight() - scroller.getViewportBounds().getHeight();</span>
+<span class="nc" id="L182">        double vScrollProportion = (scroller.getVvalue() - scroller.getVmin()) / (scroller.getVmax() - scroller.getVmin());</span>
+<span class="nc" id="L183">        double scrollYOffset = vScrollProportion * Math.max(0, extraHeight);</span>
+<span class="nc" id="L184">        return new Point2D(scrollXOffset, scrollYOffset);</span>
+    }
+
+    private void repositionScroller(Node scrollContent, ScrollPane scroller, double scaleFactor, Point2D scrollOffset) {
+<span class="nc" id="L188">        double scrollXOffset = scrollOffset.getX();</span>
+<span class="nc" id="L189">        double scrollYOffset = scrollOffset.getY();</span>
+<span class="nc" id="L190">        double extraWidth = scrollContent.getLayoutBounds().getWidth() - scroller.getViewportBounds().getWidth();</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (extraWidth &gt; 0) {</span>
+<span class="nc" id="L192">            double halfWidth = scroller.getViewportBounds().getWidth() / 2;</span>
+<span class="nc" id="L193">            double newScrollXOffset = (scaleFactor - 1) * halfWidth + scaleFactor * scrollXOffset;</span>
+<span class="nc" id="L194">            scroller.setHvalue(scroller.getHmin() + newScrollXOffset * (scroller.getHmax() - scroller.getHmin()) / extraWidth);</span>
+<span class="nc" id="L195">        } else {</span>
+<span class="nc" id="L196">            scroller.setHvalue(scroller.getHmin());</span>
+        }
+<span class="nc" id="L198">        double extraHeight = scrollContent.getLayoutBounds().getHeight() - scroller.getViewportBounds().getHeight();</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        if (extraHeight &gt; 0) {</span>
+<span class="nc" id="L200">            double halfHeight = scroller.getViewportBounds().getHeight() / 2;</span>
+<span class="nc" id="L201">            double newScrollYOffset = (scaleFactor - 1) * halfHeight + scaleFactor * scrollYOffset;</span>
+<span class="nc" id="L202">            scroller.setVvalue(scroller.getVmin() + newScrollYOffset * (scroller.getVmax() - scroller.getVmin()) / extraHeight);</span>
+<span class="nc" id="L203">        } else {</span>
+<span class="nc" id="L204">            scroller.setHvalue(scroller.getHmin());</span>
+        }
+<span class="nc" id="L206">    }</span>
+
+    Integer checkNewCoordinate(String newValue, Integer oldValue) {
+<span class="nc" id="L209">        Integer returnValue = oldValue;</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        if (NumberUtils.isCreatable(newValue)) {</span>
+<span class="nc" id="L211">            returnValue = Integer.valueOf(newValue);</span>
+<span class="nc" id="L212">            coordinatesChangedLogging();</span>
+<span class="nc" id="L213">            clearSearchData();</span>
+        }
+<span class="nc" id="L215">        return returnValue;</span>
+    }
+
+    Double checkNewMultiplier(String newValue, Double oldValue) {
+<span class="nc" id="L219">        Double returnValue = oldValue;</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        if (NumberUtils.isCreatable(newValue)) {</span>
+<span class="nc" id="L221">            returnValue = Double.valueOf(newValue);</span>
+<span class="nc" id="L222">            clearSearchData();</span>
+        }
+<span class="nc" id="L224">        return returnValue;</span>
+    }
+
+    private VBox addInputFields() {
+        //Creating a GridPane container
+<span class="nc" id="L229">        GridPane grid = new GridPane();</span>
+<span class="nc" id="L230">        grid.setPadding(new Insets(10, 10, 10, 10));</span>
+<span class="nc" id="L231">        grid.setVgap(5);</span>
+<span class="nc" id="L232">        grid.setHgap(5);</span>
+
+<span class="nc" id="L234">        GridPane gridCoordinates = new GridPane();</span>
+<span class="nc" id="L235">        gridCoordinates.setPadding(new Insets(10, 10, 10, 10));</span>
+<span class="nc" id="L236">        Label lStart = new Label(&quot;Start&quot;);</span>
+<span class="nc" id="L237">        Label lsX = new Label(&quot; X: &quot;);</span>
+<span class="nc" id="L238">        Label lsY = new Label(&quot; Y: &quot;);</span>
+<span class="nc" id="L239">        Label ltX = new Label(&quot; X: &quot;);</span>
+<span class="nc" id="L240">        Label ltY = new Label(&quot; Y: &quot;);</span>
+<span class="nc" id="L241">        Label lTarget = new Label(&quot;Target&quot;);</span>
+<span class="nc" id="L242">        TextField startX = new TextField();</span>
+<span class="nc" id="L243">        TextField startY = new TextField();</span>
+<span class="nc" id="L244">        TextField targetX = new TextField();</span>
+<span class="nc" id="L245">        TextField targetY = new TextField();</span>
+
+
+<span class="nc" id="L248">        startX.textProperty().addListener((observable, oldValue, newValue) -&gt;</span>
+        {
+<span class="nc" id="L250">            this.startX = checkNewCoordinate(newValue, this.startX);</span>
+<span class="nc" id="L251">            showEndpoints();</span>
+<span class="nc" id="L252">        });</span>
+
+<span class="nc" id="L254">        startY.textProperty().addListener((observable, oldValue, newValue) -&gt;</span>
+        {
+<span class="nc" id="L256">            this.startY = checkNewCoordinate(newValue, this.startY);</span>
+<span class="nc" id="L257">            showEndpoints();</span>
+<span class="nc" id="L258">        });</span>
+
+<span class="nc" id="L260">        targetX.textProperty().addListener((observable, oldValue, newValue) -&gt;</span>
+        {
+<span class="nc" id="L262">            this.targetX = checkNewCoordinate(newValue, this.targetX);</span>
+<span class="nc" id="L263">            showEndpoints();</span>
+<span class="nc" id="L264">        });</span>
+
+<span class="nc" id="L266">        targetY.textProperty().addListener((observable, oldValue, newValue) -&gt;</span>
+        {
+<span class="nc" id="L268">            this.targetY = checkNewCoordinate(newValue, this.targetY);</span>
+<span class="nc" id="L269">            showEndpoints();</span>
+<span class="nc" id="L270">        });</span>
+
+<span class="nc" id="L272">        GridPane.setConstraints(lStart, 0, 0);  // column 0, row 0: Start</span>
+<span class="nc" id="L273">        GridPane.setConstraints(lsX, 1, 0);  // column 1, row 0: X</span>
+<span class="nc" id="L274">        GridPane.setConstraints(startX, 2, 0);  // column 2, row 0: input text for X</span>
+<span class="nc" id="L275">        GridPane.setConstraints(lsY, 3, 0);  // column 3, row 0: Y</span>
+<span class="nc" id="L276">        GridPane.setConstraints(startY, 4, 0);  // column 4, row 0: input text for Y</span>
+
+<span class="nc" id="L278">        GridPane.setConstraints(lTarget, 0, 1);  // column 0, row 1: Target</span>
+<span class="nc" id="L279">        GridPane.setConstraints(ltX, 1, 1);  // column 1, row 1: X</span>
+<span class="nc" id="L280">        GridPane.setConstraints(targetX, 2, 1);  // column 2, row 1: input text for X</span>
+<span class="nc" id="L281">        GridPane.setConstraints(ltY, 3, 1);  // column 3, row 1: Y</span>
+<span class="nc" id="L282">        GridPane.setConstraints(targetY, 4, 1);  // column 4, row 1: input text for Y</span>
+
+<span class="nc" id="L284">        gridCoordinates.getChildren().addAll(lStart, lsX, startX, lsY, startY,</span>
+                lTarget, ltX, targetX, ltY, targetY);
+
+
+<span class="nc" id="L288">        GridPane.setConstraints(gridCoordinates, 0, 0);</span>
+
+        // Add buttons to start the search; add also fields to change the heuristic multipliers
+<span class="nc" id="L291">        Label jlD = new Label(&quot; D: &quot;);</span>
+<span class="nc" id="L292">        Label jlD2 = new Label(&quot; D2:&quot;);</span>
+<span class="nc" id="L293">        TextField jpsValueD = new TextField();</span>
+<span class="nc" id="L294">        TextField jpsValueD2 = new TextField();</span>
+<span class="nc" id="L295">        Label idalD = new Label(&quot; D: &quot;);</span>
+<span class="nc" id="L296">        Label idalD2 = new Label(&quot; D2:&quot;);</span>
+<span class="nc" id="L297">        TextField idaValueD = new TextField();</span>
+<span class="nc" id="L298">        TextField idaValueD2 = new TextField();</span>
+
+<span class="nc" id="L300">        jpsValueD.textProperty().set(String.valueOf(jpsD));</span>
+<span class="nc" id="L301">        jpsValueD2.textProperty().set(String.valueOf(jpsD2));</span>
+
+<span class="nc" id="L303">        idaValueD.textProperty().set(String.valueOf(idaD));</span>
+<span class="nc" id="L304">        idaValueD2.textProperty().set(String.valueOf(idaD2));</span>
+
+<span class="nc" id="L306">        jpsValueD.textProperty().addListener((observableValue, oldValue, newValue) -&gt; {</span>
+<span class="nc" id="L307">            jpsD = checkNewMultiplier(newValue, jpsD);</span>
+<span class="nc" id="L308">            showEndpoints();</span>
+<span class="nc" id="L309">        });</span>
+<span class="nc" id="L310">        jpsValueD2.textProperty().addListener((observableValue, oldValue, newValue) -&gt; {</span>
+<span class="nc" id="L311">            jpsD2 = checkNewMultiplier(newValue, jpsD2);</span>
+<span class="nc" id="L312">            showEndpoints();</span>
+<span class="nc" id="L313">        });</span>
+<span class="nc" id="L314">        idaValueD.textProperty().addListener((observableValue, oldValue, newValue) -&gt; {</span>
+<span class="nc" id="L315">            idaD = checkNewMultiplier(newValue, idaD);</span>
+<span class="nc" id="L316">            showEndpoints();</span>
+<span class="nc" id="L317">        });</span>
+<span class="nc" id="L318">        jpsValueD2.textProperty().addListener((observableValue, oldValue, newValue) -&gt; {</span>
+<span class="nc" id="L319">            idaD2 = checkNewMultiplier(newValue, idaD2);</span>
+<span class="nc" id="L320">            showEndpoints();</span>
+<span class="nc" id="L321">        });</span>
+
+
+<span class="nc" id="L324">        GridPane gridButtons = new GridPane();</span>
+<span class="nc" id="L325">        gridButtons.setPadding(new Insets(10, 10, 10, 10));</span>
+<span class="nc" id="L326">        Button jpsSearch = new Button(&quot;JPS&quot;);</span>
+<span class="nc" id="L327">        jpsSearch.setOnAction(event -&gt; findRouteJPS());</span>
+        //Defining the Find button
+<span class="nc" id="L329">        Button idaSearch = new Button(&quot;A*&quot;);</span>
+<span class="nc" id="L330">        GridPane.setConstraints(idaSearch, 1, 2);</span>
+
+<span class="nc" id="L332">        idaSearch.setOnAction(event -&gt; findRouteAStar());</span>
+
+<span class="nc" id="L334">        GridPane.setConstraints(jpsSearch, 0, 0);</span>
+<span class="nc" id="L335">        GridPane.setConstraints(jlD, 1, 0);  // column 1, row 0 D</span>
+<span class="nc" id="L336">        GridPane.setConstraints(jlD2, 1, 1);  // column 1, row 1: D2</span>
+<span class="nc" id="L337">        GridPane.setConstraints(jpsValueD, 2, 0);  // column 2, row 0, D value</span>
+<span class="nc" id="L338">        GridPane.setConstraints(jpsValueD2, 2, 1);  // column 2, row 1: D2 value</span>
+
+<span class="nc" id="L340">        GridPane.setConstraints(idaSearch, 4, 0);</span>
+<span class="nc" id="L341">        GridPane.setConstraints(idalD, 5, 0);  // column 5, row 0 D</span>
+<span class="nc" id="L342">        GridPane.setConstraints(idalD2, 5, 1);  // column 5, row 1: D2</span>
+<span class="nc" id="L343">        GridPane.setConstraints(idaValueD, 6, 0);  // column 6, row 0, D value</span>
+<span class="nc" id="L344">        GridPane.setConstraints(idaValueD2, 6, 1);  // column 6, row 1: D2 value</span>
+<span class="nc" id="L345">        gridButtons.getChildren().addAll(jpsSearch, jlD, jpsValueD, idaSearch, idalD, idaValueD,</span>
+                jlD2, jpsValueD2, idalD2, idaValueD2);
+
+<span class="nc" id="L348">        GridPane.setConstraints(gridButtons, 0, 1);</span>
+<span class="nc" id="L349">        grid.getChildren().addAll(gridCoordinates, gridButtons);</span>
+<span class="nc" id="L350">        VBox vbox = new VBox();</span>
+<span class="nc" id="L351">        vbox.getChildren().addAll(grid);</span>
+
+        // TODO: add fields to show the timing
+<span class="nc" id="L354">        return vbox;</span>
+    }
+
+    void coordinatesChangedLogging() {
+<span class="nc" id="L358">        log.debug(&quot;start: ({},{}) target: ({},{})&quot;, startX, startY, targetX, targetY);</span>
+<span class="nc" id="L359">    }</span>
+
+    private void clearSearchData() {
+<span class="nc" id="L362">        found = false;</span>
+<span class="nc" id="L363">        route = null;</span>
+<span class="nc" id="L364">        foundJPS = false;</span>
+<span class="nc" id="L365">        routeJPS = null;</span>
+
+<span class="nc bnc" id="L367" title="All 2 branches missed.">        for (int y = 0; y &lt; mapFileReader.getMapGrid().getSizeX(); y++) {</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">            for (int x = 0; x &lt; mapFileReader.getMapGrid().getSizeX(); x++) {</span>
+<span class="nc" id="L369">                mapFileReader.getMapGrid().getGrid()[x][y].setSearching(false);</span>
+<span class="nc" id="L370">                mapFileReader.getMapGrid().getGrid()[x][y].setChecked(false);</span>
+            }
+        }
+<span class="nc" id="L373">    }</span>
+
+    private void clearTemporarySearchData() {
+
+<span class="nc bnc" id="L377" title="All 2 branches missed.">        for (int y = 0; y &lt; mapFileReader.getMapGrid().getSizeX(); y++) {</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">            for (int x = 0; x &lt; mapFileReader.getMapGrid().getSizeX(); x++) {</span>
+<span class="nc" id="L379">                mapFileReader.getMapGrid().getGrid()[x][y].setSearching(false);</span>
+<span class="nc" id="L380">                mapFileReader.getMapGrid().getGrid()[x][y].setChecked(false);</span>
+            }
+        }
+<span class="nc" id="L383">    }</span>
+
+
+    private void showEndpoints() {
+        // update the image with the pixels
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        for (int y = 0; y &lt; mapFileReader.getMapGrid().getSizeX(); y++) {</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">            for (int x = 0; x &lt; mapFileReader.getMapGrid().getSizeX(); x++) {</span>
+                // use color near the start and target points to visualize them
+<span class="nc bnc" id="L391" title="All 4 branches missed.">                if (Math.abs(x - startX) &lt; 4 &amp;&amp; Math.abs(y - startY) &lt; 4) {</span>
+<span class="nc" id="L392">                    writableImage.getPixelWriter().setColor(x, y, Color.RED);</span>
+<span class="nc bnc" id="L393" title="All 4 branches missed.">                } else if (Math.abs(x - targetX) &lt; 4 &amp;&amp; Math.abs(y - targetY) &lt; 4) {</span>
+<span class="nc" id="L394">                    writableImage.getPixelWriter().setColor(x, y, Color.YELLOW);</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">                } else if (mapFileReader.getMapGrid().getGrid()[x][y].getNodeType() == NodeType.FREE) {</span>
+<span class="nc" id="L396">                    writableImage.getPixelWriter().setColor(x, y, Color.GREY);</span>
+                } else {
+<span class="nc" id="L398">                    writableImage.getPixelWriter().setColor(x, y, Color.BLACK);</span>
+                }
+<span class="nc bnc" id="L400" title="All 2 branches missed.">                if (mapFileReader.getMapGrid().getGrid()[x][y].isSearching()) {</span>
+<span class="nc" id="L401">                    writableImage.getPixelWriter().setColor(x, y, Color.CYAN);</span>
+                }
+
+<span class="nc bnc" id="L404" title="All 2 branches missed.">                if (mapFileReader.getMapGrid().getGrid()[x][y].isChecked()) {</span>
+                    // writableImage.getPixelWriter().setColor(x, y, Color.VIOLET);
+                }
+<span class="nc bnc" id="L407" title="All 4 branches missed.">                if (found &amp;&amp; route != null) {</span>
+<span class="nc" id="L408">                    GridNode testNode = new GridNode(x, y, NodeType.FREE);</span>
+<span class="nc bnc" id="L409" title="All 4 branches missed.">                    if (route != null &amp;&amp; route.contains(testNode)) {</span>
+<span class="nc" id="L410">                        writableImage.getPixelWriter().setColor(x, y, Color.LAWNGREEN);</span>
+                    }
+                }
+<span class="nc bnc" id="L413" title="All 4 branches missed.">                if (foundJPS &amp;&amp; routeJPS != null) {</span>
+<span class="nc" id="L414">                    GridNode testNode = new GridNode(x, y, NodeType.FREE);</span>
+<span class="nc bnc" id="L415" title="All 4 branches missed.">                    if (routeJPS != null &amp;&amp; routeJPS.contains(testNode)) {</span>
+<span class="nc" id="L416">                        writableImage.getPixelWriter().setColor(x, y, Color.CYAN);</span>
+                    }
+                }
+            }
+        }
+
+<span class="nc" id="L422">    }</span>
+
+    public void setImage(MapGrid mapGrid) {
+        // update the image with the pixels
+<span class="nc bnc" id="L426" title="All 2 branches missed.">        for (int y = 0; y &lt; mapGrid.getSizeY(); y++) {</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">            for (int x = 0; x &lt; mapGrid.getSizeX(); x++) {</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">                if (mapGrid.getGrid()[x][y].getNodeType() == NodeType.FREE) {</span>
+<span class="nc" id="L429">                    writableImage.getPixelWriter().setColor(x, y, Color.GREY);</span>
+                } else {
+<span class="nc" id="L431">                    writableImage.getPixelWriter().setColor(x, y, Color.BLACK);</span>
+                }
+            }
+        }
+<span class="nc" id="L435">    }</span>
+
+    /**
+     * Return the ObservableList of the root node of this class, used for resizing
+     * purposes in the App class
+     *
+     * @return
+     */
+    public ObservableList&lt;Node&gt; rootChildren() {
+<span class="nc" id="L444">        return gridPane.getChildren();</span>
+    }
+
+    /**
+     * Returns the underlying StackPane on which the rest of the elements are added.
+     *
+     * @return
+     */
+    public GridPane get() {
+<span class="nc" id="L453">        return gridPane;</span>
+    }
+
+    private void findRouteAStar() {
+<span class="nc" id="L457">        found = false;</span>
+<span class="nc" id="L458">        route = null;</span>
+<span class="nc" id="L459">        GridNode goal = new GridNode(targetX, targetY, NodeType.FREE);</span>
+<span class="nc" id="L460">        log.debug(&quot;finding route to {}&quot;, goal);</span>
+
+<span class="nc" id="L462">        AStar aStar = new AStar(mapFileReader.getMapGrid(), this, idaD, idaD2);</span>
+
+<span class="nc" id="L464">        GridNode start = new GridNode(startX, startY, NodeType.FREE);</span>
+
+<span class="nc" id="L466">        isFinding = true;</span>
+<span class="nc" id="L467">        Task task = new Task&lt;Void&gt;() {</span>
+
+            @Override
+            public Void call() {
+<span class="nc" id="L471">                Stack&lt;GridNode&gt; path = aStar.a_star(start, goal, 0.0);</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">                if (path != null) {</span>
+<span class="nc" id="L473">                    found = true;</span>
+<span class="nc" id="L474">                    route = path;</span>
+<span class="nc" id="L475">                    log.debug(&quot;Found: route {}&quot;, route);</span>
+<span class="nc" id="L476">                    updateView();</span>
+                }
+<span class="nc" id="L478">                return null;</span>
+            }
+        };
+<span class="nc" id="L481">        task.setOnSucceeded(event -&gt; {</span>
+<span class="nc" id="L482">            isFinding = false;</span>
+<span class="nc" id="L483">            clearTemporarySearchData();</span>
+<span class="nc" id="L484">        });</span>
+<span class="nc" id="L485">        new Thread(task).start();</span>
+<span class="nc" id="L486">    }</span>
+
+    private void findRouteJPS() {
+<span class="nc" id="L489">        foundJPS = false;</span>
+<span class="nc" id="L490">        routeJPS = null;</span>
+<span class="nc" id="L491">        GridNode goal = new GridNode(targetX, targetY, NodeType.FREE);</span>
+<span class="nc" id="L492">        log.debug(&quot;finding jps route to {} using D {} D2 {}&quot;, goal, jpsD, jpsD2);</span>
+
+<span class="nc" id="L494">        JumpPointSearch jumpPointSearch = new JumpPointSearch(mapFileReader.getMapGrid(), this, jpsD, jpsD2);</span>
+<span class="nc" id="L495">        GridNode start = new GridNode(startX, startY);</span>
+
+<span class="nc" id="L497">        isFinding = true;</span>
+<span class="nc" id="L498">        Task task = new Task&lt;Void&gt;() {</span>
+
+            @Override
+            public Void call() {
+<span class="nc" id="L502">                Queue&lt;GridNode&gt; path = jumpPointSearch.search(start, goal);</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">                if (path != null) {</span>
+<span class="nc" id="L504">                    foundJPS = true;</span>
+<span class="nc" id="L505">                    routeJPS = path;</span>
+<span class="nc" id="L506">                    log.debug(&quot;Found: JPS route, len {}:  {}&quot;, routeJPS.size(), routeJPS);</span>
+<span class="nc" id="L507">                    updateView();</span>
+                }
+<span class="nc" id="L509">                isFinding = false;</span>
+<span class="nc" id="L510">                return null;</span>
+            }
+        };
+<span class="nc" id="L513">        task.setOnSucceeded(event -&gt; {</span>
+<span class="nc" id="L514">            isFinding = false;</span>
+<span class="nc" id="L515">            clearTemporarySearchData();</span>
+<span class="nc" id="L516">        });</span>
+<span class="nc" id="L517">        new Thread(task).start();</span>
+<span class="nc" id="L518">    }</span>
+
+    @Override
+    public void updateView() {
+<span class="nc bnc" id="L522" title="All 2 branches missed.">        if (!isUpdatingUi.compareAndExchange(false, true)) {</span>
+<span class="nc" id="L523">            Platform.runLater(() -&gt; {</span>
+<span class="nc" id="L524">                showEndpoints();</span>
+<span class="nc" id="L525">                isUpdatingUi.set(false);</span>
+<span class="nc" id="L526">            });</span>
+        }
+<span class="nc" id="L528">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

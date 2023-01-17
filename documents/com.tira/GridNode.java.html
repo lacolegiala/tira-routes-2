@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fi"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GridNode.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">jacoco.exec</a> &gt; <a href="index.source.html" class="el_package">com.tira</a> &gt; <span class="el_source">GridNode.java</span></div><h1>GridNode.java</h1><pre class="source lang-java linenums">package com.tira;
+
+public class GridNode {
+
+    private final int x;
+    private final int y;
+    private NodeType t;
+
+<span class="fc" id="L9">    private boolean searching = false;</span>
+<span class="fc" id="L10">    private boolean checked = false;</span>
+<span class="fc" id="L11">    public GridNode(int x, int y, NodeType t) {</span>
+<span class="fc" id="L12">        this.x = x;</span>
+<span class="fc" id="L13">        this.y = y;</span>
+<span class="fc" id="L14">        this.t = t;</span>
+<span class="fc" id="L15">        this.searching = false;</span>
+<span class="fc" id="L16">        this.checked = false;</span>
+<span class="fc" id="L17">    }</span>
+
+<span class="fc" id="L19">    public GridNode(int x, int y) {</span>
+<span class="fc" id="L20">        this.x = x;</span>
+<span class="fc" id="L21">        this.y = y;</span>
+<span class="fc" id="L22">        this.t = NodeType.FREE;</span>
+<span class="fc" id="L23">        this.searching = false;</span>
+<span class="fc" id="L24">        this.checked = false;</span>
+<span class="fc" id="L25">    }</span>
+
+    public void setNodeType(NodeType t) {
+<span class="fc" id="L28">        this.t = t;</span>
+<span class="fc" id="L29">    }</span>
+    public  NodeType getNodeType() {
+<span class="fc" id="L31">        return this.t;</span>
+    }
+
+    public int getX() {
+<span class="fc" id="L35">        return x ;</span>
+    }
+    public int getY() {
+<span class="fc" id="L38">        return y ;</span>
+    }
+
+    public String toString() {
+<span class="fc" id="L42">        return &quot;(&quot;+x+&quot;,&quot;+y+&quot;)&quot;;</span>
+    }
+    public boolean isSearching() {
+<span class="nc" id="L45">        return searching;</span>
+    }
+
+    public void setSearching(boolean searching) {
+<span class="nc" id="L49">        this.searching = searching;</span>
+<span class="nc" id="L50">    }</span>
+
+    public boolean isChecked() {
+<span class="fc" id="L53">        return checked;</span>
+    }
+
+    public void setChecked(boolean checked) {
+<span class="fc" id="L57">        this.checked = checked;</span>
+<span class="fc" id="L58">    }</span>
+
+    public boolean isTraversable() {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        return t == NodeType.FREE;</span>
+    }
+
+    // Return true in comparison if another GridNode has same coordinates
+    public boolean equals(Object n) {
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (n instanceof GridNode) {</span>
+<span class="fc bfc" id="L67" title="All 4 branches covered.">            if (x==((GridNode)n).getX() &amp;&amp; y == ((GridNode)n).getY()) {</span>
+<span class="fc" id="L68">                return true;</span>
+            }
+        }
+<span class="fc" id="L71">        return false;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

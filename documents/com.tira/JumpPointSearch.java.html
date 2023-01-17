@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fi"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JumpPointSearch.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">jacoco.exec</a> &gt; <a href="index.source.html" class="el_package">com.tira</a> &gt; <span class="el_source">JumpPointSearch.java</span></div><h1>JumpPointSearch.java</h1><pre class="source lang-java linenums">package com.tira;
+
+import lombok.extern.log4j.Log4j2;
+
+import java.util.*;
+
+// Used http://users.cecs.anu.edu.au/~dharabor/data/papers/harabor-grastien-aaai11.pdf
+// as specification, and used also https://github.com/kevinsheehan/jps for sample code (should the MIT license be copied here?)
+public class JumpPointSearch {
+
+<span class="fc" id="L11">    private static final org.apache.logging.log4j.Logger log</span>
+<span class="fc" id="L12">            = org.apache.logging.log4j.LogManager.getLogger(JumpPointSearch.class);</span>
+
+    private final MapGrid mapGrid;
+
+    private final IUpdateView viewUpdater;
+
+<span class="fc" id="L18">    public JumpPointSearch(MapGrid mapGrid, IUpdateView viewUpdater, Double D, Double D2) {</span>
+<span class="fc" id="L19">        this.mapGrid = mapGrid;</span>
+<span class="fc" id="L20">        this.viewUpdater = viewUpdater;</span>
+        // TODO: adjust heuristic : based on debugging JPS works with D=1.5 and D2=1.5
+        // Now: force suitable values
+<span class="fc" id="L23">        IHeuristic iHeuristic = mapGrid.getHeuristic();</span>
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">        if (iHeuristic instanceof DiagonalHeuristic) {</span>
+<span class="fc" id="L25">            DiagonalHeuristic diagonalHeuristic = (DiagonalHeuristic)iHeuristic;</span>
+<span class="fc" id="L26">            diagonalHeuristic.setD(D);</span>
+<span class="fc" id="L27">            diagonalHeuristic.setD2(D2);</span>
+        }
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">        if (iHeuristic instanceof ManhattanHeuristic) {</span>
+<span class="nc" id="L30">            ManhattanHeuristic manhattanHeuristic = (ManhattanHeuristic)iHeuristic;</span>
+<span class="nc" id="L31">            manhattanHeuristic.setD(D);</span>
+        }
+<span class="fc" id="L33">    }</span>
+
+    public Queue&lt;GridNode&gt; search(GridNode start, GridNode goal) {
+<span class="fc" id="L36">        Map&lt;GridNode, Double&gt; fullPathLength = new HashMap&lt;&gt;(); // cost from start + heuristics to goal</span>
+<span class="fc" id="L37">        Map&lt;GridNode, Double&gt; costFomStart = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L38">        Map&lt;GridNode, Double&gt; heuristicToGoal = new HashMap&lt;&gt;();</span>
+
+        // put the nodes to queue and select the shortest estimated full path from there
+<span class="fc" id="L41">        Queue&lt;GridNode&gt; open = new PriorityQueue&lt;&gt;((a, b) -&gt; {</span>
+            // returns the minimum full path length first
+<span class="fc" id="L43">            return Double.compare(fullPathLength.getOrDefault(a, 0d), fullPathLength.getOrDefault(b, 0d));</span>
+        });
+        // Nodes handled are added to this set, so that they are not handled again inside the recursion
+<span class="fc" id="L46">        Set&lt;GridNode&gt; closed = new HashSet&lt;&gt;();</span>
+        // Store the predecessors of the node for building the full path
+<span class="fc" id="L48">        Map&lt;GridNode, GridNode&gt; parentMap = new HashMap&lt;&gt;();</span>
+        // the goal (and its neighbours) are stored here
+<span class="fc" id="L50">        Set&lt;GridNode&gt; goals = new HashSet&lt;&gt;();</span>
+
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if (goal.getNodeType().isFree()) {</span>
+<span class="fc" id="L53">            goals.add(goal);</span>
+        }
+        // Add goal neighbours to the list of points where jumping stops
+        // debugging showed that this helps to find the goal
+<span class="fc" id="L57">        goals.addAll(mapGrid.getGridNodesNonBlockedNeighbours(goal));</span>
+
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (goals.isEmpty()) {</span>
+<span class="nc" id="L60">            return null;</span>
+        }
+
+        // add the start node into the list to be checked
+<span class="fc" id="L64">        open.add(start);</span>
+
+        // while the open list is not empty
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        while (!open.isEmpty()) {</span>
+            // pop the position of node which has the shortest estimated total length
+<span class="fc" id="L69">            GridNode node = open.poll();</span>
+<span class="fc" id="L70">            closed.add(node);</span>
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            if (goals.contains(node)) {</span>
+                // We already found the target
+<span class="fc" id="L74">                return backtrace(node, parentMap);</span>
+            }
+            // add all possible next steps from the current node
+<span class="fc" id="L77">            getSuccessors(parentMap, node, start, goal, goals, open, closed, fullPathLength, costFomStart, heuristicToGoal);</span>
+<span class="fc" id="L78">        }</span>
+<span class="nc" id="L79">        log.debug(&quot;No more entries, failed to find&quot;);</span>
+        // failed to find a path
+<span class="nc" id="L81">        mapGrid.clearVisited();</span>
+<span class="nc" id="L82">        return null;</span>
+    }
+
+    // Algorithm 1: identify successors
+    private void getSuccessors(Map&lt;GridNode, GridNode&gt; parentMap,
+                               GridNode node,
+                               GridNode s,
+                               GridNode g,
+                               Set&lt;GridNode&gt; goals,
+                               Queue&lt;GridNode&gt; open,
+                               Set&lt;GridNode&gt; closed,
+                               Map&lt;GridNode, Double&gt; fMap,
+                               Map&lt;GridNode, Double&gt; cMap,
+                               Map&lt;GridNode, Double&gt; hMap) {
+
+<span class="fc" id="L97">        List&lt;GridNode&gt; neighbours = prune(parentMap, node, g);</span>
+
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        for (GridNode neighbour : neighbours) {</span>
+<span class="fc" id="L100">            GridNode jumpNode = jump(neighbour, node, g, goals);</span>
+
+            // don't add a node we have already handled and is shorter path
+            // or if there was no path found at all
+<span class="fc bfc" id="L104" title="All 4 branches covered.">            if (jumpNode == null || closed.contains(jumpNode)) continue;</span>
+
+            // determine the jumpNode's distance from the start along the current path
+<span class="fc" id="L107">            Double distanceToJump = mapGrid.getHeuristic().cost(jumpNode, node);    // cost between these</span>
+<span class="fc" id="L108">            Double newLength = cMap.getOrDefault(node, 0d) + distanceToJump;   // added to the stored length</span>
+
+            // check if this is a shorter path for a node already in the open queue
+            // or if it hasn't been opened, add to open queue open and update it
+<span class="fc" id="L112">            Double oldLength = cMap.getOrDefault(jumpNode, 0d);</span>
+<span class="fc bfc" id="L113" title="All 4 branches covered.">            if (!open.contains(jumpNode) || newLength &lt; oldLength) {</span>
+<span class="fc" id="L114">                cMap.put(jumpNode, newLength);</span>
+<span class="fc" id="L115">                hMap.put(jumpNode, mapGrid.getHeuristic().heuristic(jumpNode, g));</span>
+<span class="fc" id="L116">                fMap.put(jumpNode, cMap.getOrDefault(jumpNode, 0d) + hMap.getOrDefault(jumpNode, 0d));</span>
+                // adding node to parent map
+<span class="fc" id="L118">                parentMap.put(jumpNode, node);</span>
+                // if this is new short path, add to open nodes
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                if (!open.contains(jumpNode)) {</span>
+<span class="fc" id="L121">                    open.offer(jumpNode);</span>
+                }
+            }
+<span class="fc" id="L124">        }</span>
+<span class="fc" id="L125">    }</span>
+
+    private List&lt;GridNode&gt; addValidGridNode(List&lt;GridNode&gt; nodes, int x, int y) {
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (mapGrid.getNode(x, y) != null) {</span>
+<span class="fc" id="L129">            nodes.add(mapGrid.getNode(x, y));</span>
+        }
+<span class="fc" id="L131">        return nodes;</span>
+    }
+
+    // pruning, here trying to add the neighbours in the correct direction
+    private List&lt;GridNode&gt; prune(Map&lt;GridNode, GridNode&gt; parentMap, GridNode node, GridNode goal) {
+<span class="fc" id="L136">        List&lt;GridNode&gt; neighbours = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L137">        GridNode parent = parentMap.get(node);</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (parent == null) {</span>
+            // add all non blocked neighbours
+<span class="fc" id="L140">            neighbours.addAll(mapGrid.getGridNodesSortedByDistanceToTarget(node, goal));</span>
+        } else {
+            // add suitable neighbours based on parent
+<span class="fc" id="L143">            final int x = node.getX();</span>
+<span class="fc" id="L144">            final int y = node.getY();</span>
+            // determine direction from parent
+<span class="fc" id="L146">            final int dx = (x - parent.getX()) / Math.max(Math.abs(x - parent.getX()), 1);</span>
+<span class="fc" id="L147">            final int dy = (y - parent.getY()) / Math.max(Math.abs(y - parent.getY()), 1);</span>
+
+            // both x and y differ: diagonal search
+<span class="fc bfc" id="L150" title="All 4 branches covered.">            if (dx != 0 &amp;&amp; dy != 0) {</span>
+                // above or below
+<span class="fc bfc" id="L152" title="All 2 branches covered.">                if (mapGrid.isTraversableNode(x, y + dy))</span>
+<span class="fc" id="L153">                    neighbours = addValidGridNode(neighbours, x, y + dy);</span>
+                // left or right
+<span class="fc bfc" id="L155" title="All 2 branches covered.">                if (mapGrid.isTraversableNode(x + dx, y))</span>
+<span class="fc" id="L156">                    neighbours = addValidGridNode(neighbours, x + dx, y);</span>
+                // diagonal in NW,NE,SE,SW
+<span class="fc bfc" id="L158" title="All 2 branches covered.">                if (mapGrid.isTraversableNode(x + dx, y + dy))</span>
+<span class="fc" id="L159">                    neighbours = addValidGridNode(neighbours, x + dx, y + dy);</span>
+                // forced?  block around the corner
+                // if node left or right is not traversable, add corner node
+<span class="fc bfc" id="L162" title="All 2 branches covered.">                if (!mapGrid.isTraversableNode(x - dx, y))</span>
+<span class="fc" id="L163">                    neighbours = addValidGridNode(neighbours, x - dx, y + dy);</span>
+                // If node up or down is not traversable, add corner node
+<span class="fc bfc" id="L165" title="All 2 branches covered.">                if (!mapGrid.isTraversableNode(x, y - dy))</span>
+<span class="fc" id="L166">                    neighbours = addValidGridNode(neighbours, x + dx, y - dy);</span>
+            } else { // horizontal or vertical : either x or y is the same
+<span class="fc bfc" id="L168" title="All 2 branches covered.">                if (dx == 0) {</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                    if (mapGrid.isTraversableNode(x, y + dy))</span>
+<span class="fc" id="L170">                        neighbours = addValidGridNode(neighbours, x, y + dy);</span>
+                    // if next is blocked add possible node after that
+<span class="fc bfc" id="L172" title="All 2 branches covered.">                    if (!mapGrid.isTraversableNode(x + 1, y))</span>
+<span class="fc" id="L173">                        neighbours = addValidGridNode(neighbours, x + 1, y + dy);</span>
+                    // if previous is blocked add possible node after that
+<span class="fc bfc" id="L175" title="All 2 branches covered.">                    if (!mapGrid.isTraversableNode(x - 1, y))</span>
+<span class="fc" id="L176">                        neighbours = addValidGridNode(neighbours, x - 1, y + dy);</span>
+                } else {
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                    if (mapGrid.isTraversableNode(x + dx, y))</span>
+<span class="fc" id="L179">                        neighbours = addValidGridNode(neighbours, x + dx, y);</span>
+                    // if above is blocked add possible node after that
+<span class="fc bfc" id="L181" title="All 2 branches covered.">                    if (!mapGrid.isTraversableNode(x, y + 1))</span>
+<span class="fc" id="L182">                        neighbours = addValidGridNode(neighbours, x + dx, y + 1);</span>
+                    // if below is blocked add possible node after that
+<span class="fc bfc" id="L184" title="All 2 branches covered.">                    if (!mapGrid.isTraversableNode(x, y - 1))</span>
+<span class="fc" id="L185">                        neighbours = addValidGridNode(neighbours, x + dx, y - 1);</span>
+                }
+            }
+        }
+<span class="fc" id="L189">        return neighbours;</span>
+    }
+
+    private GridNode jump(GridNode node, GridNode current, GridNode goal, Set&lt;GridNode&gt; goals) {
+<span class="fc bfc" id="L193" title="All 2 branches covered.">        if (node == null) {</span>
+<span class="fc" id="L194">            return null;</span>
+        }
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        if (!node.isTraversable()) {</span>
+<span class="fc" id="L197">            return null;</span>
+        }
+
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (goals.contains(node)) {</span>
+            // found it (or a neighbour)
+<span class="fc" id="L202">            return node;</span>
+        }
+
+        // Check if ∃ n0 ∈ neighbours(n) s.t. n0  is forced then return n
+        // How &quot;forced&quot; is checked; adjacent to a blocked GridNode &quot;round the corner&quot;?
+<span class="fc" id="L207">        final int dx = node.getX() - current.getX();</span>
+<span class="fc" id="L208">        final int dy = node.getY() - current.getY();</span>
+
+        // check if diagonal movement
+<span class="fc bfc" id="L211" title="All 4 branches covered.">        if (dx != 0 &amp;&amp; dy != 0) {</span>
+            //
+<span class="fc bfc" id="L213" title="All 4 branches covered.">            if ((mapGrid.isTraversableNode(node.getX() - dx, node.getY() + dy) &amp;&amp; !mapGrid.isTraversableNode(node.getX() - dx, node.getY())) ||</span>
+<span class="fc bfc" id="L214" title="All 4 branches covered.">                    (mapGrid.isTraversableNode(node.getX() + dx, node.getY() - dy) &amp;&amp; !mapGrid.isTraversableNode(node.getX(), node.getY() - dy))) {</span>
+<span class="fc" id="L215">                return node;</span>
+            }
+            // when moving diagonally, check for vertical or horizontal jump points
+            /* This is the part:
+                 9: for all i ∈ {1, 2} do
+                10:   if jump(n, ~di, s, g) is not null then
+                11: return n
+             */
+<span class="fc bfc" id="L223" title="All 2 branches covered.">            if (jump(mapGrid.getNode(node.getX() + dx, node.getY()), node, goal, goals) != null ||</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">                    jump(mapGrid.getNode(node.getX(), node.getY() + dy), node, goal, goals) != null) {</span>
+<span class="fc" id="L225">                return node;</span>
+            }
+        } else { // check along horizontal/vertical
+<span class="fc bfc" id="L228" title="All 2 branches covered.">            if (dx != 0) {</span>
+<span class="fc bfc" id="L229" title="All 4 branches covered.">                if ((mapGrid.isTraversableNode(node.getX() + dx, node.getY() + 1) &amp;&amp; !mapGrid.isTraversableNode(node.getX(), node.getY() + 1)) ||</span>
+<span class="fc bfc" id="L230" title="All 4 branches covered.">                        (mapGrid.isTraversableNode(node.getX() + dx, node.getY() - 1) &amp;&amp; !mapGrid.isTraversableNode(node.getX(), node.getY() - 1))) {</span>
+<span class="fc" id="L231">                    return node;</span>
+                }
+            } else {
+<span class="fc bfc" id="L234" title="All 4 branches covered.">                if ((mapGrid.isTraversableNode(node.getX() + 1, node.getY() + dy) &amp;&amp; !mapGrid.isTraversableNode(node.getX() + 1, node.getY())) ||</span>
+<span class="fc bfc" id="L235" title="All 4 branches covered.">                        (mapGrid.isTraversableNode(node.getX() - 1, node.getY() + dy) &amp;&amp; !mapGrid.isTraversableNode(node.getX() - 1, node.getY()))) {</span>
+<span class="fc" id="L236">                    return node;</span>
+                }
+            }
+        }
+
+<span class="fc" id="L241">        return jump(mapGrid.getNode(node.getX() + dx, node.getY() + dy), node, goal, goals);</span>
+    }
+
+
+    // Generate the path from node backwards based on the parent nodes stored.
+    private Queue&lt;GridNode&gt; backtrace(GridNode node, Map&lt;GridNode, GridNode&gt; parentMap) {
+<span class="fc" id="L247">        LinkedList&lt;GridNode&gt; path = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L248">        path.add(node);</span>
+
+        int previousX, previousY, currentX, currentY;
+        int dx, dy;
+        int steps;
+        GridNode temp;
+<span class="fc bfc" id="L254" title="All 2 branches covered.">        while (parentMap.containsKey(node)) {</span>
+<span class="fc" id="L255">            previousX = parentMap.get(node).getX();</span>
+<span class="fc" id="L256">            previousY = parentMap.get(node).getY();</span>
+<span class="fc" id="L257">            currentX = node.getX();</span>
+<span class="fc" id="L258">            currentY = node.getY();</span>
+<span class="fc" id="L259">            steps = Integer.max(Math.abs(previousX - currentX), Math.abs(previousY - currentY));</span>
+<span class="fc" id="L260">            dx = Integer.compare(previousX, currentX);</span>
+<span class="fc" id="L261">            dy = Integer.compare(previousY, currentY);</span>
+
+<span class="fc" id="L263">            temp = node;</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">            for (int i = 0; i &lt; steps; i++) {</span>
+<span class="fc" id="L265">                temp = mapGrid.getNode(temp.getX() + dx, temp.getY() + dy);</span>
+<span class="fc" id="L266">                path.addFirst(temp);</span>
+            }
+<span class="fc" id="L268">            node = parentMap.get(node);</span>
+        }
+<span class="fc" id="L270">        mapGrid.clearVisited();</span>
+<span class="fc" id="L271">        return path;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
