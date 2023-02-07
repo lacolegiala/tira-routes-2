@@ -70,9 +70,13 @@ public class JumpPointSearch {
             closed.add(node);
 
             if (goals.contains(node)) {
-                // We already found the target
-                return backtrace(node, parentMap);
+                if (!node.equals(goal)) {
+                    // Add the last jump from the neighbour to the goal
+                    parentMap.put(goal, node);
+                }
+                return backtrace(goal, parentMap);
             }
+
             // add all possible next steps from the current node
             getSuccessors(parentMap, node, start, goal, goals, open, closed, fullPathLength, costFomStart, heuristicToGoal);
         }
@@ -174,7 +178,7 @@ public class JumpPointSearch {
                     // if previous is blocked add possible node after that
                     if (!mapGrid.isTraversableNode(x - 1, y))
                         neighbours = addValidGridNode(neighbours, x - 1, y + dy);
-                } else {
+                } else if (dx != 0 && dy == 0) {
                     if (mapGrid.isTraversableNode(x + dx, y))
                         neighbours = addValidGridNode(neighbours, x + dx, y);
                     // if above is blocked add possible node after that
@@ -221,7 +225,11 @@ public class JumpPointSearch {
                 11: return n
              */
             if (jump(mapGrid.getNode(node.getX() + dx, node.getY()), node, goal, goals) != null ||
-                    jump(mapGrid.getNode(node.getX(), node.getY() + dy), node, goal, goals) != null) {
+                    jump(mapGrid.getNode(node.getX(), node.getY() + dy), node, goal, goals) != null ||
+                    jump(mapGrid.getNode(node.getX() - dx, node.getY()), node, goal, goals) != null ||
+                    jump(mapGrid.getNode(node.getX(), node.getY() - dy), node, goal, goals) != null
+            ) {
+                // log.debug("jump: after non null jump: returning node {}, current is {}", node, current);
                 return node;
             }
         } else { // check along horizontal/vertical
@@ -240,7 +248,6 @@ public class JumpPointSearch {
 
         return jump(mapGrid.getNode(node.getX() + dx, node.getY() + dy), node, goal, goals);
     }
-
 
     // Generate the path from node backwards based on the parent nodes stored.
     private Queue<GridNode> backtrace(GridNode node, Map<GridNode, GridNode> parentMap) {

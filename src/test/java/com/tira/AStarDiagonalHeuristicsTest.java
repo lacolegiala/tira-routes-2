@@ -57,8 +57,8 @@ class AStarDiagonalHeuristicsTest {
     @Test
     void aStarWithDifferentHeuristicValues() {
         DummyUpdater dummyUpdater = new DummyUpdater();
-        GridNode startNode = new GridNode(360, 500);
-        GridNode endNode = new GridNode(100, 100);
+        GridNode startNode = new GridNode(22, 31);
+        GridNode endNode = new GridNode(49, 31);
         AStar aStar = new AStar(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
         Long startStamp = System.nanoTime();
         Stack<GridNode> path = aStar.a_star(startNode, endNode, 0.0);
@@ -84,8 +84,8 @@ class AStarDiagonalHeuristicsTest {
     @Test
     void aStarWithDifferentHeuristicValuesShortPath() {
         DummyUpdater dummyUpdater = new DummyUpdater();
-        GridNode startNode = new GridNode(220, 120);
-        GridNode endNode = new GridNode(100, 100);
+        GridNode startNode = new GridNode(414, 245);
+        GridNode endNode = new GridNode(408, 236);
         AStar aStar = new AStar(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
         Long startStamp = System.nanoTime();
         Stack<GridNode> path = aStar.a_star(startNode, endNode, 0.0);
@@ -129,8 +129,8 @@ class AStarDiagonalHeuristicsTest {
     @Test
     void aStarWithDifferentHeuristicValuesLongPath() {
         DummyUpdater dummyUpdater = new DummyUpdater();
-        GridNode startNode = new GridNode(10, 20);
-        GridNode endNode = new GridNode(505, 505);
+        GridNode startNode = new GridNode(55, 2);
+        GridNode endNode = new GridNode(442, 355);
         AStar aStar = new AStar(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
         Long startStamp = System.nanoTime();
         Stack<GridNode> path = aStar.a_star(startNode, endNode, 0.0);

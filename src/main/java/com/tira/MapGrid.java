@@ -190,14 +190,12 @@ public class MapGrid {
         return neighbours;
     }
 
-
     List<GridNode> addNode(int x, int y, List<GridNode> neighbours) {
         if (x >= 0 && x < sizeX && y >= 0 && y < sizeY) {
             neighbours.add(this.grid[x][y]);
         }
         return neighbours;
     }
-
 
     public List<GridNode> getNeighbours(GridNode node) {
         // Get all nodes that are near specific node: at most 8 nodes surrounding the
@@ -291,6 +289,5 @@ public class MapGrid {
         }
         return null;
     }
-
 
 }

@@ -22,11 +22,8 @@ MapApplication starts the app.
 
 ## Performance
 
-It seems to depend on the length and direction of the path whether A* or JPS performs better.
-The heuristic values also hold a significance, at least with long paths: with a long path,
-both A* and JPS found a shorter route using 1 and 1 for the heuristic values, as opposed to
-1 and square root of 1. It is backed up by both the tests and by visual inspection, when giving
-similar values in the UI.
+Both A* and JPS find paths that are equally short, however they require different heuristic values for this.
+A* is somewhat slower.
 
-Usually, it seems that JPS finds shorter routes when the given path is short, and A* finds shorter
-routes when the path is long. However, the heuristic values can change this.
+When comparing to the optimal lengths given for the maps, it seems that both algorithms work well with finding short paths.
+With long paths, the routes found by the algorithms are shorter than the optimal lengths.

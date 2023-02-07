@@ -56,8 +56,8 @@ class JumpPointSearchDiagonalHeuristicTest {
     @Test
     void jpsWithDifferentHeuristicValues() {
         DummyUpdater dummyUpdater = new DummyUpdater();
-        GridNode startNode = new GridNode(360, 500);
-        GridNode endNode = new GridNode(100, 100);
+        GridNode startNode = new GridNode(22, 31);
+        GridNode endNode = new GridNode(49, 31);
         Long startStamp = System.nanoTime();
         Queue<GridNode> path = jumpPointSearch.search(startNode, endNode);
         Long endStamp = System.nanoTime();
@@ -82,8 +82,8 @@ class JumpPointSearchDiagonalHeuristicTest {
     @Test
     void jpsWithDifferentHeuristicValuesShortPath() {
         DummyUpdater dummyUpdater = new DummyUpdater();
-        GridNode startNode = new GridNode(220, 120);
-        GridNode endNode = new GridNode(100, 100);
+        GridNode startNode = new GridNode(414, 245);
+        GridNode endNode = new GridNode(408, 236);
         jumpPointSearch = new JumpPointSearch(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
         Long startStamp = System.nanoTime();
         Queue<GridNode> path = jumpPointSearch.search(startNode, endNode);
@@ -106,7 +106,6 @@ class JumpPointSearchDiagonalHeuristicTest {
         }
     }
 
-
     private void runOneTest(Double D, Double D2, DiagonalHeuristic diagonalHeuristic, GridNode startNode, GridNode endNode) {
         diagonalHeuristic.setD(D);
         diagonalHeuristic.setD2(D2);
@@ -121,14 +120,13 @@ class JumpPointSearchDiagonalHeuristicTest {
         } else {
             log.debug("D {}, D2 {} Failed in {} ms : path len {} ({} ns)", D, D2, duration / 1000000, path.size(), duration);
         }
-
     }
 
     @Test
     void jpsWithDifferentHeuristicValuesLongPath() {
         DummyUpdater dummyUpdater = new DummyUpdater();
-        GridNode startNode = new GridNode(10, 20);
-        GridNode endNode = new GridNode(505, 505);
+        GridNode startNode = new GridNode(55, 2);
+        GridNode endNode = new GridNode(442, 355);
         jumpPointSearch = new JumpPointSearch(mapGrid, dummyUpdater, 1.0, 1.4142135623731);
         Long startStamp = System.nanoTime();
         Queue<GridNode> path = jumpPointSearch.search(startNode, endNode);
