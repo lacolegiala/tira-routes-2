@@ -1,31 +1,18 @@
 package com.tira;
 
 import javafx.application.Platform;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.Queue;
@@ -43,8 +30,6 @@ public class MapView implements IUpdateView {
     private WritableImage writableImage;
 
     private ImageView imageView;
-
-    private ScrollPane zoomPane;
 
     private MapFileReader mapFileReader;
 
@@ -69,8 +54,8 @@ public class MapView implements IUpdateView {
     private Double jpsD = 1.0;
     private Double jpsD2 = 1.4142135623731;
 
-    private Double idaD = 1.0;
-    private Double idaD2 = 1.4142135623731;
+    private Double aStarD = 1.0;
+    private Double aStarD2 = 1.4142135623731;
 
     private AtomicBoolean isUpdatingUi;
 
@@ -95,114 +80,6 @@ public class MapView implements IUpdateView {
         GridPane.setRowIndex(vboxInputFields, 1);
 
         gridPane.getChildren().addAll(vboxImage, vboxInputFields);
-    }
-
-    // LATER: zoom seems to slow the UI a lot...
-    private ScrollPane createZoomPane(final VBox vbox) {
-        final double SCALE_DELTA = 1.1;
-        final StackPane zoomPane = new StackPane();
-
-        zoomPane.getChildren().add(vbox);
-
-        final ScrollPane scroller = new ScrollPane();
-        final Group scrollContent = new Group(zoomPane);
-        scroller.setContent(scrollContent);
-
-        scroller.viewportBoundsProperty().addListener(new ChangeListener<Bounds>() {
-            @Override
-            public void changed(ObservableValue<? extends Bounds> observable,
-                                Bounds oldValue, Bounds newValue) {
-                zoomPane.setMinSize(newValue.getWidth(), newValue.getHeight());
-            }
-        });
-
-        scroller.setPrefViewportWidth(this.startX);
-        scroller.setPrefViewportHeight(this.startY);
-
-        zoomPane.setOnScroll(new EventHandler<ScrollEvent>() {
-            @Override
-            public void handle(ScrollEvent event) {
-                event.consume();
-
-                if (event.getDeltaY() == 0) {
-                    return;
-                }
-
-                double scaleFactor = (event.getDeltaY() > 0) ? SCALE_DELTA
-                        : 1 / SCALE_DELTA;
-
-                // amount of scrolling in each direction in scrollContent coordinate
-                // units
-                Point2D scrollOffset = figureScrollOffset(scrollContent, scroller);
-
-                vbox.setScaleX(vbox.getScaleX() * scaleFactor);
-                vbox.setScaleY(vbox.getScaleY() * scaleFactor);
-
-                // move viewport so that old center remains in the center after the
-                // scaling
-                repositionScroller(scrollContent, scroller, scaleFactor, scrollOffset);
-
-            }
-        });
-
-        // Panning via drag....
-        final ObjectProperty<Point2D> lastMouseCoordinates = new SimpleObjectProperty<Point2D>();
-        scrollContent.setOnMousePressed(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                lastMouseCoordinates.set(new Point2D(event.getX(), event.getY()));
-            }
-        });
-
-        scrollContent.setOnMouseDragged(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                double deltaX = event.getX() - lastMouseCoordinates.get().getX();
-                double extraWidth = scrollContent.getLayoutBounds().getWidth() - scroller.getViewportBounds().getWidth();
-                double deltaH = deltaX * (scroller.getHmax() - scroller.getHmin()) / extraWidth;
-                double desiredH = scroller.getHvalue() - deltaH;
-                scroller.setHvalue(Math.max(0, Math.min(scroller.getHmax(), desiredH)));
-
-                double deltaY = event.getY() - lastMouseCoordinates.get().getY();
-                double extraHeight = scrollContent.getLayoutBounds().getHeight() - scroller.getViewportBounds().getHeight();
-                double deltaV = deltaY * (scroller.getHmax() - scroller.getHmin()) / extraHeight;
-                double desiredV = scroller.getVvalue() - deltaV;
-                scroller.setVvalue(Math.max(0, Math.min(scroller.getVmax(), desiredV)));
-            }
-        });
-
-        return scroller;
-    }
-
-    private Point2D figureScrollOffset(Node scrollContent, ScrollPane scroller) {
-        double extraWidth = scrollContent.getLayoutBounds().getWidth() - scroller.getViewportBounds().getWidth();
-        double hScrollProportion = (scroller.getHvalue() - scroller.getHmin()) / (scroller.getHmax() - scroller.getHmin());
-        double scrollXOffset = hScrollProportion * Math.max(0, extraWidth);
-        double extraHeight = scrollContent.getLayoutBounds().getHeight() - scroller.getViewportBounds().getHeight();
-        double vScrollProportion = (scroller.getVvalue() - scroller.getVmin()) / (scroller.getVmax() - scroller.getVmin());
-        double scrollYOffset = vScrollProportion * Math.max(0, extraHeight);
-        return new Point2D(scrollXOffset, scrollYOffset);
-    }
-
-    private void repositionScroller(Node scrollContent, ScrollPane scroller, double scaleFactor, Point2D scrollOffset) {
-        double scrollXOffset = scrollOffset.getX();
-        double scrollYOffset = scrollOffset.getY();
-        double extraWidth = scrollContent.getLayoutBounds().getWidth() - scroller.getViewportBounds().getWidth();
-        if (extraWidth > 0) {
-            double halfWidth = scroller.getViewportBounds().getWidth() / 2;
-            double newScrollXOffset = (scaleFactor - 1) * halfWidth + scaleFactor * scrollXOffset;
-            scroller.setHvalue(scroller.getHmin() + newScrollXOffset * (scroller.getHmax() - scroller.getHmin()) / extraWidth);
-        } else {
-            scroller.setHvalue(scroller.getHmin());
-        }
-        double extraHeight = scrollContent.getLayoutBounds().getHeight() - scroller.getViewportBounds().getHeight();
-        if (extraHeight > 0) {
-            double halfHeight = scroller.getViewportBounds().getHeight() / 2;
-            double newScrollYOffset = (scaleFactor - 1) * halfHeight + scaleFactor * scrollYOffset;
-            scroller.setVvalue(scroller.getVmin() + newScrollYOffset * (scroller.getVmax() - scroller.getVmin()) / extraHeight);
-        } else {
-            scroller.setHvalue(scroller.getHmin());
-        }
     }
 
     Integer checkNewCoordinate(String newValue, Integer oldValue) {
@@ -244,7 +121,6 @@ public class MapView implements IUpdateView {
         TextField targetX = new TextField();
         TextField targetY = new TextField();
 
-
         startX.textProperty().addListener((observable, oldValue, newValue) ->
         {
             this.startX = checkNewCoordinate(newValue, this.startX);
@@ -284,7 +160,6 @@ public class MapView implements IUpdateView {
         gridCoordinates.getChildren().addAll(lStart, lsX, startX, lsY, startY,
                 lTarget, ltX, targetX, ltY, targetY);
 
-
         GridPane.setConstraints(gridCoordinates, 0, 0);
 
         // Add buttons to start the search; add also fields to change the heuristic multipliers
@@ -300,8 +175,8 @@ public class MapView implements IUpdateView {
         jpsValueD.textProperty().set(String.valueOf(jpsD));
         jpsValueD2.textProperty().set(String.valueOf(jpsD2));
 
-        idaValueD.textProperty().set(String.valueOf(idaD));
-        idaValueD2.textProperty().set(String.valueOf(idaD2));
+        idaValueD.textProperty().set(String.valueOf(aStarD));
+        idaValueD2.textProperty().set(String.valueOf(aStarD2));
 
         jpsValueD.textProperty().addListener((observableValue, oldValue, newValue) -> {
             jpsD = checkNewMultiplier(newValue, jpsD);
@@ -312,14 +187,13 @@ public class MapView implements IUpdateView {
             showEndpoints();
         });
         idaValueD.textProperty().addListener((observableValue, oldValue, newValue) -> {
-            idaD = checkNewMultiplier(newValue, idaD);
+            aStarD = checkNewMultiplier(newValue, aStarD);
             showEndpoints();
         });
         jpsValueD2.textProperty().addListener((observableValue, oldValue, newValue) -> {
-            idaD2 = checkNewMultiplier(newValue, idaD2);
+            aStarD2 = checkNewMultiplier(newValue, aStarD2);
             showEndpoints();
         });
-
 
         GridPane gridButtons = new GridPane();
         gridButtons.setPadding(new Insets(10, 10, 10, 10));
@@ -381,7 +255,6 @@ public class MapView implements IUpdateView {
             }
         }
     }
-
 
     private void showEndpoints() {
         // update the image with the pixels
@@ -459,7 +332,7 @@ public class MapView implements IUpdateView {
         GridNode goal = new GridNode(targetX, targetY, NodeType.FREE);
         log.debug("finding route to {}", goal);
 
-        AStar aStar = new AStar(mapFileReader.getMapGrid(), this, idaD, idaD2);
+        AStar aStar = new AStar(mapFileReader.getMapGrid(), this, aStarD, aStarD2);
 
         GridNode start = new GridNode(startX, startY, NodeType.FREE);
 
@@ -472,7 +345,7 @@ public class MapView implements IUpdateView {
                 if (path != null) {
                     found = true;
                     route = path;
-                    log.debug("Found: route {}", route);
+                    log.debug("Found: route, len {}:  {}", route.size(), route);
                     updateView();
                 }
                 return null;

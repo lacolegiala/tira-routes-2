@@ -66,7 +66,6 @@ public class MapGrid {
         return false;
     }
 
-
     public void setNodeType(int x, int y, NodeType t) {
         this.grid[x][y].setNodeType(t);
     }
@@ -137,102 +136,10 @@ public class MapGrid {
         return neighbours;
     }
 
-
-    public List<GridNode> getGridNodesTowardsGoal(GridNode node, Direction.DIRECTION d) {
-        // Get all nodes that are near specific node: at most 8 nodes surrounding the
-        // node given
-        List<GridNode> neighbours = new ArrayList<>();
-        GridNode n = step(node, d);
-        if (n != null) {
-            neighbours.add(n);
-        } else {
-            // No traversable node in the direction d, try something else
-            int x = node.getX();
-            int y = node.getY();
-            int nx = x;
-            int ny = y;
-            switch (d) {
-                case N:
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.NE);
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.NW);
-                    break;
-                case S:
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.SE);
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.SW);
-                    break;
-                case E:
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.NE);
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.SE);
-                    break;
-                case W:
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.NW);
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.SW);
-                    break;
-                case NW:
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.N);
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.W);
-                    break;
-                case NE:
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.N);
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.E);
-                    break;
-                case SE:
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.E);
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.S);
-                    break;
-                case SW:
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.W);
-                    neighbours = addNeighbourIfExists(neighbours, node, Direction.DIRECTION.S);
-                    break;
-
-            }
-        }
-        return neighbours;
-    }
-
     List<GridNode> addNode(int x, int y, List<GridNode> neighbours) {
         if (x >= 0 && x < sizeX && y >= 0 && y < sizeY) {
             neighbours.add(this.grid[x][y]);
         }
-        return neighbours;
-    }
-
-    public List<GridNode> getNeighbours(GridNode node) {
-        // Get all nodes that are near specific node: at most 8 nodes surrounding the
-        // node given
-        List<GridNode> neighbours = new ArrayList<>();
-        try {
-            int x = node.getX();
-            int y = node.getY();
-            if (x > 0) {    // neighbours left
-                if (y > 0) {
-                    neighbours = addNode(x - 1, y - 1, neighbours);
-                }
-                neighbours = addNode(x - 1, y, neighbours);
-                if (y < this.sizeY - 1) {
-                    neighbours = addNode(x - 1, y + 1, neighbours);
-                }
-            }
-            // above and below
-            if (y > 0) {
-                neighbours = addNode(x, y - 1, neighbours);
-            }
-            if (y < this.sizeY - 1) {
-                neighbours = addNode(x, y + 1, neighbours);
-            }
-            if (x < this.sizeX - 1) {    // neighbours right
-                if (y > 0) {
-                    neighbours = addNode(x + 1, y - 1, neighbours);
-                }
-                neighbours = addNode(x + 1, y, neighbours);
-                if (y < this.sizeY - 1) {
-                    neighbours = addNode(x + 1, y + 1, neighbours);
-                }
-            }
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            log.debug("array ex for {}", node, ex);
-        }
-
         return neighbours;
     }
 

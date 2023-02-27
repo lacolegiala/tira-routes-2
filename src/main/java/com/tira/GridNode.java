@@ -70,5 +70,13 @@ public class GridNode {
         }
         return false;
     }
+
+    @Override
+    public int hashCode()
+    {
+        // Note that even if x+y can be the same for different objects, it is ok to return x+y as hash code
+        // matching how equals is handled.
+        return x+y;
+    }
 }
 

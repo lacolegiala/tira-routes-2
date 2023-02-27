@@ -11,7 +11,11 @@ public class DiagonalHeuristic implements IHeuristic {
         int dx = Math.abs(n1.getX() - n2.getX());
         int dy = Math.abs(n1.getY() - n2.getY());
         // "octile distance" from http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-        return D * Math.max(dx, dy) + (D2-D) * Math.min(dx, dy);
+        if (dx > dy) {
+            return (D * (dx-dy) + D2 * dy);
+        } else {
+            return (D * (dy-dx) + D2 * dx);
+        }
     }
 
     @Override

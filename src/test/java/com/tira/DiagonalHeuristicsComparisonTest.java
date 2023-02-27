@@ -82,12 +82,12 @@ class DiagonalHeuristicsComparisonTest {
 
     void complicatedTestOne() {
         log.debug("complicatedTestOne");
-        runTheTests(10, 20, 505, 505);
+        runTheTests(320, 220, 150, 401);
     }
 
     void complicatedTestBack() {
         log.debug("complicatedTestBack");
-        runTheTests(505, 505, 10, 20);
+        runTheTests(175, 500, 400, 285);
     }
 
     void runTheTests(Integer sX, Integer sY, Integer gX, Integer gY) {
@@ -97,8 +97,8 @@ class DiagonalHeuristicsComparisonTest {
 
         IHeuristic heuristic = mapGrid.getHeuristic();
         Long aStarMinimum = Long.MAX_VALUE;
-        Double aStarMinimumD = 0.90;
-        Double aStarMinimumD2 = 0.90;
+        Double aStarMinimumD = 0.10;
+        Double aStarMinimumD2 = 0.10;
         List<Pair<Double, Double>> otherAstar = new ArrayList<>();
 
         if (heuristic instanceof DiagonalHeuristic) {

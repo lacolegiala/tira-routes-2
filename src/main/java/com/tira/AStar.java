@@ -29,10 +29,6 @@ public class AStar {
             diagonalHeuristic.setD(D);
             diagonalHeuristic.setD2(D2);
         }
-        if (iHeuristic instanceof ManhattanHeuristic) {
-            ManhattanHeuristic manhattanHeuristic = (ManhattanHeuristic)iHeuristic;
-            manhattanHeuristic.setD(D);
-        }
     }
 
     public Stack<GridNode> reconstructPath(Map<GridNode, GridNode> cameFrom, GridNode current) {
